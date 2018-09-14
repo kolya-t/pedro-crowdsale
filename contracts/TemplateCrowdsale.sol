@@ -54,4 +54,8 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
     function setRate(uint _rate) public {
         rate = _rate;
     }
+
+    function getUsdRaised(uint _centsInOneEth) public returns (uint) {
+        return weiRaised * _centsInOneEth / (100 * 1 ether);
+    }
 }

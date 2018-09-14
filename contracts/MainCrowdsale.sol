@@ -9,6 +9,21 @@ import "./Consts.sol";
 
 
 contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale, CappedCrowdsale {
+    struct Purchase {
+        uint contributedWei;
+        uint rate;
+        bool isPending;
+    }
+
+    mapping (address => Purchase[]) public purchases;
+
+    uint public ethUsdRate = 20754; // div by 100
+
+    uint public usdCentsRaisedByEth;
+    uint public usdCentsRaisedByEos;
+
+    uint public lastEosUsdUpdate;
+
     function hasStarted() public view returns (bool) {
         return now >= openingTime;
     }

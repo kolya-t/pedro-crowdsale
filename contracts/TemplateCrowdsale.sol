@@ -4,20 +4,10 @@ import "./MainCrowdsale.sol";
 import "./WhitelistedCrowdsale.sol";
 
 
-contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
+contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
     event Initialized();
     event TimesChanged(uint startTime, uint endTime, uint oldStartTime, uint oldEndTime);
     bool public initialized = false;
-
-    uint public lastEosUsdUpdate;
-
-    mapping (address => Purchase[]) public purchases;
-
-    struct Purchase {
-        uint contributedWei;
-        uint rate;
-        bool isPending;
-    }
 
     constructor(MintableToken _token) public
         Crowdsale(1000 * TOKEN_DECIMAL_MULTIPLIER, 0x9b37d7b266a41ef130c4625850c8484cf928000d, _token)
@@ -67,13 +57,12 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
         rate = _rate;
     }
 
-    function getUsdRaised(uint _centsInOneEth) public returns (uint) {
-        return weiRaised * _centsInOneEth / (100 * 1 ether);
-    }
-
-    function setUsdRaisedByEos() public onlyOwner {
+    function setUsdRaisedByEos(uint _usdCentsRaisedByEos, uint _ethUsdRate) public onlyOwner {
         require(lastEosUsdUpdate + UPDATE_FREQUENCY >= now);
+        require(_usdCentsRaisedByEos >= usdCentsRaisedByEos);
         lastEosUsdUpdate = now;
+        usdCentsRaisedByEos = _usdCentsRaisedByEos;
+        ethUsdRate = _ethUsdRate;
     }
 
     function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
@@ -84,5 +73,6 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
 
     function _updatePurchasingState(address _beneficiary, uint256 _weiAmount) internal {
         purchases[_beneficiary].push(Purchase(_weiAmount, rate, !isWhitelisted(_beneficiary)));
+        usdCentsRaisedByEth += _weiAmount * ethUsdRate / (100 * 1 ether);
     }
 }

@@ -1,10 +1,9 @@
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./MainCrowdsale.sol";
 
 
-contract WhitelistedCrowdsale is Crowdsale, Ownable {
+contract WhitelistedCrowdsale is MainCrowdsale {
     mapping (address => bool) private whitelist;
 
     event WhitelistedAddressAdded(address indexed _address);

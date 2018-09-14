@@ -1,0 +1,8 @@
+{
+  "name": "pedro-crowdsale",
+  "version": "0.1.0",
+  "main": "index.js",
+  "repository": "https://github.com/kolya-t/pedro-crowdsale.git",
+  "author": "Nikolay Toporkov <toporkov.kolya96@gmail.com>",
+  "license": "MIT"
+}

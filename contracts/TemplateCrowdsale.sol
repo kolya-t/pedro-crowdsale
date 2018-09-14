@@ -49,7 +49,7 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
         internal
     {
         require(msg.value >= MIN_INVESTMENT);
-        require(now < lastEosUsdUpdate + UPDATE_FREQUENCY);
+        require(now < lastEosUsdUpdate + stopAfter);
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }
 
@@ -57,12 +57,13 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
         rate = _rate;
     }
 
-    function setUsdRaisedByEos(uint _usdCentsRaisedByEos, uint _ethUsdRate) public onlyOwner {
-        require(lastEosUsdUpdate + UPDATE_FREQUENCY >= now);
+    function setUsdRaisedByEos(uint _usdCentsRaisedByEos, uint _ethUsdRate, uint _stopAfterSeconds) public onlyOwner {
+        require(lastEosUsdUpdate + stopAfter >= now);
         require(_usdCentsRaisedByEos >= usdCentsRaisedByEos);
         lastEosUsdUpdate = now;
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
         ethUsdRate = _ethUsdRate;
+        stopAfter = _stopAfterSeconds;
     }
 
     function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {

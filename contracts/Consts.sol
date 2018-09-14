@@ -2,7 +2,6 @@ pragma solidity ^0.4.23;
 
 
 contract Consts {
-    uint public constant UPDATE_FREQUENCY = 1 days;
     uint public constant MIN_INVESTMENT = 100000000000000000; // 0.1 ETH
     uint public constant TOKEN_DECIMALS = 10;
     uint8 public constant TOKEN_DECIMALS_UINT8 = 10;

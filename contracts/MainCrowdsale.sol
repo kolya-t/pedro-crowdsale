@@ -18,6 +18,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale, CappedC
     mapping (address => Purchase[]) public purchases;
 
     uint public ethUsdRate = 20754; // div by 100
+    uint public stopAfter = 1 days;
 
     uint public usdCentsRaisedByEth;
     uint public usdCentsRaisedByEos;

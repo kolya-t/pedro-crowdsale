@@ -11,6 +11,14 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
 
     uint public lastEosUsdUpdate;
 
+    mapping (address => Purchase[]) public purchases;
+
+    struct Purchase {
+        uint contributedWei;
+        uint rate;
+        bool isPending;
+    }
+
     constructor(MintableToken _token) public
         Crowdsale(1000 * TOKEN_DECIMAL_MULTIPLIER, 0x9b37d7b266a41ef130c4625850c8484cf928000d, _token)
         TimedCrowdsale(START_TIME > now ? START_TIME : now, 1507820400)
@@ -66,5 +74,15 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
     function setUsdRaisedByEos() public onlyOwner {
         require(lastEosUsdUpdate + UPDATE_FREQUENCY >= now);
         lastEosUsdUpdate = now;
+    }
+
+    function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
+        if (isWhitelisted(_beneficiary)) {
+            _deliverTokens(_beneficiary, _tokenAmount);
+        }
+    }
+
+    function _updatePurchasingState(address _beneficiary, uint256 _weiAmount) internal {
+        purchases[_beneficiary].push(Purchase(_weiAmount, rate, !isWhitelisted(_beneficiary)));
     }
 }

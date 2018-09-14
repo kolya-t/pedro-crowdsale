@@ -50,4 +50,8 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
         require(msg.value >= 1000000000000000000);
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }
+
+    function setRate(uint _rate) public {
+        rate = _rate;
+    }
 }

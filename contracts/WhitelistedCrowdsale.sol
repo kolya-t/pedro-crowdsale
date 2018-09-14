@@ -18,12 +18,25 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         _;
     }
 
+    function _addAddressToWhitelist(address _address) internal {
+        whitelist[_address] = true;
+        emit WhitelistedAddressAdded(_address);
+
+        Purchase[] storage purchArray = purchases[_address];
+        for (uint i = 0; i < purchArray.length; i++) {
+            Purchase storage purchase = purchArray[i];
+            if (purchase.isPending) {
+                _deliverTokens(_address, purchase.contributedWei.mul(purchase.rate).div(1 ether));
+                purchase.isPending = false;
+            }
+        }
+    }
+
     /**
      * @dev add single address to whitelist
      */
     function addAddressToWhitelist(address _address) external onlyOwner {
-        whitelist[_address] = true;
-        emit WhitelistedAddressAdded(_address);
+        _addAddressToWhitelist(_address);
     }
 
     /**
@@ -31,17 +44,20 @@ contract WhitelistedCrowdsale is MainCrowdsale {
      */
     function addAddressesToWhitelist(address[] _addresses) external onlyOwner {
         for (uint i = 0; i < _addresses.length; i++) {
-            whitelist[_addresses[i]] = true;
-            emit WhitelistedAddressAdded(_addresses[i]);
+            _addAddressToWhitelist(_addresses[i]);
         }
+    }
+
+    function _removeAddressFromWhitelist(address _address) internal {
+        delete whitelist[_address];
+        emit WhitelistedAddressRemoved(_address);
     }
 
     /**
      * @dev remove single address from whitelist
      */
     function removeAddressFromWhitelist(address _address) external onlyOwner {
-        delete whitelist[_address];
-        emit WhitelistedAddressRemoved(_address);
+        _removeAddressFromWhitelist(_address);
     }
 
     /**
@@ -49,8 +65,7 @@ contract WhitelistedCrowdsale is MainCrowdsale {
      */
     function removeAddressesFromWhitelist(address[] _addresses) external onlyOwner {
         for (uint i = 0; i < _addresses.length; i++) {
-            delete whitelist[_addresses[i]];
-            emit WhitelistedAddressRemoved(_addresses[i]);
+            _removeAddressFromWhitelist(_addresses[i]);
         }
     }
 

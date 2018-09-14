@@ -51,7 +51,7 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }
 
-    function setRate(uint _rate) public {
+    function setRate(uint _rate) public onlyOwner {
         rate = _rate;
     }
 

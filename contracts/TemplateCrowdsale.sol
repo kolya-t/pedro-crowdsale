@@ -9,11 +9,14 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
     event TimesChanged(uint startTime, uint endTime, uint oldStartTime, uint oldEndTime);
     bool public initialized = false;
 
+    uint public lastEosUsdUpdate;
+
     constructor(MintableToken _token) public
         Crowdsale(1000 * TOKEN_DECIMAL_MULTIPLIER, 0x9b37d7b266a41ef130c4625850c8484cf928000d, _token)
         TimedCrowdsale(START_TIME > now ? START_TIME : now, 1507820400)
         CappedCrowdsale(100000000000000000000000000000000000)
     {
+        lastEosUsdUpdate = START_TIME;
     }
 
     function init() public onlyOwner {
@@ -47,7 +50,8 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
     )
         internal
     {
-        require(msg.value >= 1000000000000000000);
+        require(msg.value >= MIN_INVESTMENT);
+        require(now < lastEosUsdUpdate + UPDATE_FREQUENCY);
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }
 
@@ -57,5 +61,10 @@ contract TemplateCrowdsale is Consts, MainCrowdsale, WhitelistedCrowdsale {
 
     function getUsdRaised(uint _centsInOneEth) public returns (uint) {
         return weiRaised * _centsInOneEth / (100 * 1 ether);
+    }
+
+    function setUsdRaisedByEos() public onlyOwner {
+        require(lastEosUsdUpdate + UPDATE_FREQUENCY >= now);
+        lastEosUsdUpdate = now;
     }
 }

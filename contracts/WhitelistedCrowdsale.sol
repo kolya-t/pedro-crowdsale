@@ -27,6 +27,7 @@ contract WhitelistedCrowdsale is MainCrowdsale {
      * @dev add single address to whitelist
      */
     function addAddressToWhitelist(address _address) external onlyOwner {
+        require(!isFinalized);
         _addAddressToWhitelist(_address);
     }
 
@@ -34,6 +35,7 @@ contract WhitelistedCrowdsale is MainCrowdsale {
      * @dev add addresses to whitelist
      */
     function addAddressesToWhitelist(address[] _addresses) external onlyOwner {
+        require(!isFinalized);
         for (uint i = 0; i < _addresses.length; i++) {
             _addAddressToWhitelist(_addresses[i]);
         }
@@ -44,5 +46,24 @@ contract WhitelistedCrowdsale is MainCrowdsale {
      */
     function isWhitelisted(address _address) public view returns (bool) {
         return whitelist[_address];
+    }
+
+    function refundWL() public {
+        require(isFinalized);
+        require(!isWhitelisted(msg.sender));
+        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
+        require(wrapper.isPending);
+
+        uint returnWei;
+        for (uint i = 0; i < wrapper.purchases.length; i++) {
+            Purchase storage purchase = wrapper.purchases[i];
+            returnWei = returnWei.add(purchase.contributedWei);
+        }
+
+        if (returnWei > 0) {
+            msg.sender.transfer(returnWei);
+        }
+
+        delete pendPurchases[msg.sender];
     }
 }

@@ -23,6 +23,21 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         }
     }
 
+    function addAddressToWhitelistOnceContribution(address _address, uint _index) internal {
+        require(!isFinalized);
+
+        Purchase[] storage array = purchases[_address];
+        Purchase storage purchase = array[_index];
+        require(purchase.isPending);
+
+        weiRaised = weiRaised.add(purchase.contributedWei);
+        usdCentsRaisedByEth = usdCentsRaisedByEth.add(purchase.contributedWei.mul(ethUsdCentRate).div(1 ether));
+        purchase.isPending = false;
+
+        whitelist[_address] = true;
+        emit WhitelistedAddressAdded(_address);
+    }
+
     /**
      * @dev add single address to whitelist
      */
@@ -50,7 +65,6 @@ contract WhitelistedCrowdsale is MainCrowdsale {
 
     function refundWLOnce() public {
         require(isFinalized);
-        require(!isWhitelisted(msg.sender));
         Purchase[] storage array = purchases[msg.sender];
         require(array.length > 0);
 

@@ -27,6 +27,9 @@ contract WhitelistedCrowdsale is MainCrowdsale {
             Purchase storage purchase = purchArray[i];
             if (purchase.isPending) {
                 _deliverTokens(_address, purchase.contributedWei.mul(purchase.rate).div(1 ether));
+                weiRaised = weiRaised.add(purchase.contributedWei);
+                usdCentsRaisedByEth = usdCentsRaisedByEth
+                      .add(purchase.contributedWei.mul(ethUsdRate).div(uint(100).mul(1 ether)));
                 purchase.isPending = false;
             }
         }

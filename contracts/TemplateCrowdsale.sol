@@ -66,14 +66,35 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
         stopAfter = _stopAfterSeconds;
     }
 
-    function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
+    function buyTokens(address _beneficiary) public payable {
+        uint256 weiAmount = msg.value;
+        _preValidatePurchase(_beneficiary, weiAmount);
+
         if (isWhitelisted(_beneficiary)) {
-            _deliverTokens(_beneficiary, _tokenAmount);
+            // calculate token amount to be created
+            uint256 tokens = _getTokenAmount(weiAmount);
+
+            // update state
+            weiRaised = weiRaised.add(weiAmount);
+
+            _processPurchase(_beneficiary, tokens);
+            emit TokenPurchase(
+                msg.sender,
+                _beneficiary,
+                weiAmount,
+                tokens
+            );
+
+            usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdRate).div(uint(100).mul(1 ether)));
         }
+
+        _updatePurchasingState(_beneficiary, weiAmount);
+
+        _forwardFunds();
+        _postValidatePurchase(_beneficiary, weiAmount);
     }
 
     function _updatePurchasingState(address _beneficiary, uint256 _weiAmount) internal {
         purchases[_beneficiary].push(Purchase(_weiAmount, rate, !isWhitelisted(_beneficiary)));
-        usdCentsRaisedByEth += _weiAmount * ethUsdRate / (100 * 1 ether);
     }
 }

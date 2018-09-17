@@ -54,6 +54,34 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
         return super.hasClosed() || usdCentsRaisedByEth.add(usdCentsRaisedByEos) >= USDCENTS_HARD_CAP;
     }
 
+    function withdrawOnce() public {
+        require(isFinalized);
+        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
+        require(wrapper.purchases.length > 0);
+
+        uint lastIndex = wrapper.purchases.length - 1;
+        Purchase storage purchase = wrapper.purchases[lastIndex];
+
+        if (overageCents > 0) {
+            uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
+            uint returnOverage = purchase.contributedWei.mul(overageCents).mul(contributedCents).div(centsRaised);
+            if (returnOverage > 0) {
+                msg.sender.transfer(returnOverage);
+            }
+        }
+
+        uint returnTokens = purchase.contributedWei.mul(purchase.rate).div(1 ether);
+        if (returnTokens > 0) {
+            _deliverTokens(msg.sender, returnTokens);
+        }
+
+        delete wrapper.purchases[lastIndex];
+        wrapper.purchases.length--;
+        if (wrapper.purchases.length == 0) {
+            delete pendPurchases[msg.sender];
+        }
+    }
+
     function withdraw() public {
         require(isFinalized);
 

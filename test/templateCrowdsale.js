@@ -8,9 +8,8 @@ require('chai')
 const { timeTo, increaseTime, revert, snapshot } = require('sc-library/test-utils/evmMethods');
 const { web3async, estimateConstructGas } = require('sc-library/test-utils/web3Utils');
 
-const Crowdsale = artifacts.require('./TemplateCrowdsale.sol');
-const Token = artifacts.require('./MainToken.sol');
-
+const Crowdsale = artifacts.require('./VaeonCrowdsale.sol');
+const Token = artifacts.require('./VaeonToken.sol');
 
 const BASE_RATE = new BigNumber('1000');
 const SOFT_CAP_WEI = new BigNumber('0');
@@ -21,13 +20,7 @@ const TOKEN_DECIMAL_MULTIPLIER = new BigNumber(10).toPower(10); // eslint-disabl
 const ETHER = web3.toWei(1, 'ether');
 const GAS_PRICE = web3.toWei(100, 'gwei');
 
-
-
-
 const MIN_VALUE_WEI = new BigNumber('1000000000000000000');
-
-
-
 
 contract('TemplateCrowdsale', accounts => {
     const OWNER = accounts[0];
@@ -42,7 +35,7 @@ contract('TemplateCrowdsale', accounts => {
 
     const createCrowdsale = async () => {
         const token = await Token.new();
-        const crowdsale = await Crowdsale.new(token.address);
+        const crowdsale = await Crowdsale.new(token.address, 1000, 21995, 86400);
         await token.transferOwnership(crowdsale.address);
         await crowdsale.init();
         return crowdsale;
@@ -54,10 +47,7 @@ contract('TemplateCrowdsale', accounts => {
     };
 
     const getRate = async (weiAmount, crowdsale) => {
-        let rate = BASE_RATE.mul(TOKEN_DECIMAL_MULTIPLIER);
-
-        
-        return rate;
+        return BASE_RATE.mul(TOKEN_DECIMAL_MULTIPLIER);
     };
 
     const tokensForWei = async (weiAmount, crowdsale) => {
@@ -75,7 +65,7 @@ contract('TemplateCrowdsale', accounts => {
 
     it('#0 gas usage', async () => {
         const token = await Token.new();
-        await estimateConstructGas(Crowdsale, token.address)
+        await estimateConstructGas(Crowdsale, token.address, 1000, 21995, 86400)
             .then(console.info);
     });
 
@@ -89,9 +79,9 @@ contract('TemplateCrowdsale', accounts => {
     });
 
     it('#0 3/4 precheck', async () => {
-        OWNER.should.be.equals('0xe33c67fcb6f17ecadbc6fa7e9505fc79e9c8a8fd', 'it must be the same');
-        COLD_WALLET.should.be.equals('0x9b37d7b266a41ef130c4625850c8484cf928000d', 'it must be the same');
-        TARGET_USER.should.be.equals('0x8ffff2c69f000c790809f6b8f9abfcbaab46b322', 'it must be the same');
+        OWNER.should.be.equals('0xe0142c436305d7f63553f00616976d6e17720353', 'it must be the same');
+        COLD_WALLET.should.be.equals('0x5e2909baee620b3aac56ab8dfeb1b4f096933705', 'it must be the same');
+        TARGET_USER.should.be.equals('0x862509647141f70c975cd02f3b4bde8a0669fde1', 'it must be the same');
     });
 
     it('#1 construct', async () => {
@@ -113,35 +103,31 @@ contract('TemplateCrowdsale', accounts => {
     it('#3 check finished', async () => {
         const crowdsale = await createCrowdsale();
         let hasStarted = await crowdsale.hasStarted();
-        let hasEnded = await crowdsale.hasEnded();
+        let hasClosed = await crowdsale.hasClosed();
 
         hasStarted.should.be.equals(false, 'hasStarted before timeshift');
-        hasEnded.should.be.equals(false, 'hasEnded before timeshift');
+        hasClosed.should.be.equals(false, 'hasClosed before timeshift');
 
         await timeTo(END_TIME + 1);
 
         hasStarted = await crowdsale.hasStarted();
-        hasEnded = await crowdsale.hasEnded();
+        hasClosed = await crowdsale.hasClosed();
 
         hasStarted.should.be.equals(true, 'hasStarted after timeshift');
-        hasEnded.should.be.equals(true, 'hasEnded after timeshift');
+        hasClosed.should.be.equals(true, 'hasClosed after timeshift');
     });
 
     it('#4 check simple buy token', async () => {
         const crowdsale = await createCrowdsale();
         await increaseTime(START_TIME - now);
-        
+
         await crowdsale.addAddressToWhitelist(BUYER_1, { from: TARGET_USER });
-        
 
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
-        wei = HARD_CAP_WEI.div(2).floor();
-        
 
-        
+        wei = HARD_CAP_WEI.div(2).floor();
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
 
         const expectedTokens = await tokensForWei(wei, crowdsale);
 
@@ -152,50 +138,38 @@ contract('TemplateCrowdsale', accounts => {
         actualTokens.should.be.bignumber.equal(expectedTokens);
 
         let balance;
-        
+
         balance = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
-        
+
         balance.should.be.bignumber.equal(wei, 'money should be on vault');
     });
 
     it('#5 check buy tokens before ICO', async () => {
         const crowdsale = await createCrowdsale();
 
-        
         await crowdsale.addAddressToWhitelist(BUYER_1, { from: TARGET_USER });
-        
 
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
+
         wei = HARD_CAP_WEI.div(2).floor();
-        
-        
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
+
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei }).should.eventually.be.rejected;
     });
-
-    
-
-    
 
     it('#8 check finish crowdsale after time', async () => {
         const crowdsale = await createCrowdsale();
         const token = Token.at(await crowdsale.token());
         await increaseTime(START_TIME - now);
 
-        
         await crowdsale.addAddressToWhitelist(OWNER, { from: TARGET_USER });
-        
 
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
-        wei = HARD_CAP_WEI.div(2).floor();
-        
 
-        
+        wei = HARD_CAP_WEI.div(2).floor();
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
 
         // send some tokens
         await crowdsale.send(wei);
@@ -209,14 +183,13 @@ contract('TemplateCrowdsale', accounts => {
         // try to transfer some tokens (it should work now)
         const tokens = await tokensForWei(wei, crowdsale);
 
-        
         // mint must be disabled
         await token.mint(BUYER_2, tokens, { from: TARGET_USER }).should.eventually.be.rejected;
         await token.mintingFinished().should.eventually.be.true;
 
         await token.transfer(BUYER_1, tokens);
         (await token.balanceOf(BUYER_1)).should.be.bignumber.equals(tokens, 'balanceOf buyer must be');
-        
+
         await token.owner().should.eventually.be.equals(TARGET_USER, 'token owner must be TARGET_USER, not OWNER');
     });
 
@@ -225,102 +198,64 @@ contract('TemplateCrowdsale', accounts => {
         const token = Token.at(await crowdsale.token());
         await increaseTime(START_TIME - now);
 
-        
         await crowdsale.addAddressToWhitelist(OWNER, { from: TARGET_USER });
-        
 
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
-        wei = HARD_CAP_WEI.div(2).floor();
-        
 
-        
+        wei = HARD_CAP_WEI.div(2).floor();
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
 
         await crowdsale.send(wei);
 
         // check transferable before end
-        
         await token.transfer(BUYER_1, (await tokensForWei(wei, crowdsale)).div(2));
-        
     });
-
-    
 
     it('#11 check finish crowdsale because time', async () => {
         const crowdsale = await createCrowdsale();
         await increaseTime(END_TIME - now);
 
-        
         await crowdsale.addAddressToWhitelist(OWNER, { from: TARGET_USER });
-        
 
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
-        wei = HARD_CAP_WEI.div(2).floor();
-        
 
-        
+        wei = HARD_CAP_WEI.div(2).floor();
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
+
         await crowdsale.send(wei).should.eventually.be.rejected;
     });
 
-    
-
-    
-
-    
     it('#15 check if minimal value not reached', async () => {
         const crowdsale = await createCrowdsale();
         await increaseTime(START_TIME - now);
 
-        
         await crowdsale.addAddressToWhitelist(BUYER_1, { from: TARGET_USER });
-        
 
         const belowMin = MIN_VALUE_WEI.div(2).floor();
         await crowdsale.sendTransaction({ from: BUYER_1, value: belowMin }).should.eventually.be.rejected;
     });
 
-    
-    
-
-    
-
-    
-
-    
-
-    
-
-    
     it('#25 check buy not by whitelisted', async () => {
         const crowdsale = await createCrowdsale();
         await timeTo(START_TIME);
 
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
-        wei = HARD_CAP_WEI.div(2).floor();
-        
 
-        
+        wei = HARD_CAP_WEI.div(2).floor();
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
 
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei }).should.eventually.be.rejected;
     });
 
     it('#26 check add multiple addresses to whitelist', async () => {
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
-        wei = HARD_CAP_WEI.div(2).floor();
-        
 
-        
+        wei = HARD_CAP_WEI.div(2).floor();
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
 
         const addresses = [BUYER_1, BUYER_2];
 
@@ -338,13 +273,11 @@ contract('TemplateCrowdsale', accounts => {
 
     it('#27 check remove addresses from whitelist', async () => {
         let wei = SOFT_CAP_WEI.div(2).floor();
-        
-        wei = HARD_CAP_WEI.div(2).floor();
-        
 
-        
+        wei = HARD_CAP_WEI.div(2).floor();
+
         wei = BigNumber.max(wei, MIN_VALUE_WEI);
-        
+
 
         const addresses = [BUYER_1, BUYER_2, BUYER_3];
 
@@ -367,7 +300,6 @@ contract('TemplateCrowdsale', accounts => {
         const tx = await crowdsale.addAddressesToWhitelist(addresses, { from: TARGET_USER });
         console.info('Gas used for whitelist 100 addresses: ', tx.receipt.gasUsed);
     });
-    
 });
 
 

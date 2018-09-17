@@ -8,15 +8,7 @@ require('chai')
 const { revert, snapshot } = require('sc-library/test-utils/evmMethods');
 const { estimateConstructGas } = require('sc-library/test-utils/web3Utils');
 
-const Token = artifacts.require('./MainToken.sol');
-
-const Crowdsale = artifacts.require('./TemplateCrowdsale.sol');
-
-const SuccessfulERC223Receiver = artifacts.require('./SuccessfulERC223Receiver.sol');
-const FailingERC223Receiver = artifacts.require('./FailingERC223Receiver.sol');
-const ERC223ReceiverWithoutTokenFallback = artifacts.require('./ERC223ReceiverWithoutTokenFallback.sol');
-
-
+const Token = artifacts.require('./VaeonToken.sol');
 
 contract('Token', accounts => {
     const OWNER = accounts[0];
@@ -24,7 +16,6 @@ contract('Token', accounts => {
     const TARGET_USER = accounts[5];
 
     let TOKEN_OWNER = OWNER;
-    
 
     let snapshotId;
 
@@ -41,7 +32,7 @@ contract('Token', accounts => {
     });
 
     it('#0 3/4 precheck', async () => {
-        TARGET_USER.should.be.equals('0x8ffff2c69f000c790809f6b8f9abfcbaab46b322', 'it must be the same');
+        TARGET_USER.should.be.equals('0x862509647141f70c975cd02f3b4bde8a0669fde1', 'it must be the same');
     });
 
     it('#1 construct', async () => {
@@ -50,7 +41,7 @@ contract('Token', accounts => {
         await token.owner().should.eventually.be.equals(TOKEN_OWNER);
     });
 
-    
+
     it('#2 minting', async () => {
         const token = await Token.new();
 
@@ -78,10 +69,10 @@ contract('Token', accounts => {
         await token.burn(tokensToMint / 2);
     });
 
-    
-    
 
-    
+
+
+
 });
 
 

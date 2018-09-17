@@ -1,4 +1,4 @@
-const Token = artifacts.require('./MainToken.sol');
+const Token = artifacts.require('./VaeonToken.sol');
 const Crowdsale = artifacts.require('./VaeonCrowdsale.sol');
 
 module.exports = function (deployer, network, accounts) {

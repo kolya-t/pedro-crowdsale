@@ -3,11 +3,20 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/emission/MintedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
-import "./MainToken.sol";
+import "./VaeonToken.sol";
 import "./Consts.sol";
 
 
 contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
+    event TokenPurchase(
+        address indexed purchaser,
+        address indexed beneficiary,
+        uint256 value,
+        uint256 rate,
+        uint256 ethUsdCentRate
+    );
+    event Initialized();
+
     struct PurchaseWrapper {
         bool isPending;
         Purchase[] purchases;
@@ -31,6 +40,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
 
     uint public centsRaised;
     uint public overageCents;
+    bool public initialized;
 
     function hasStarted() public view returns (bool) {
         return now >= openingTime;
@@ -75,7 +85,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
 
     function finalization() internal {
         super.finalization();
-        MainToken(token).unpause();
+        VaeonToken(token).unpause();
         require(MintableToken(token).finishMinting());
         Ownable(token).transferOwnership(TARGET_USER);
 

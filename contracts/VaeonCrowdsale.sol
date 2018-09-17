@@ -5,18 +5,8 @@ import "./WhitelistedCrowdsale.sol";
 
 
 contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
-    event TokenPurchase(
-        address indexed purchaser,
-        address indexed beneficiary,
-        uint256 value,
-        uint256 rate,
-        uint256 ethUsdCentRate
-    );
-    event Initialized();
-    bool public initialized = false;
-
     constructor(
-        MintableToken _token,
+        VaeonToken _token,
         uint _ethTokenRate,
         uint _ethUsdCentRate,
         uint _stopAfterSeconds
@@ -33,7 +23,7 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
     function init() public onlyOwner {
         require(!initialized);
         initialized = true;
-        MainToken(token).pause();
+        VaeonToken(token).pause();
         transferOwnership(TARGET_USER);
         emit Initialized();
     }

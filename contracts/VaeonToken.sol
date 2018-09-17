@@ -6,8 +6,7 @@ import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "./Consts.sol";
 
 
-contract MainToken is Consts, MintableToken, BurnableToken, Pausable
-{
+contract VaeonToken is Consts, MintableToken, BurnableToken, Pausable {
     function name() public pure returns (string _name) {
         return TOKEN_NAME;
     }

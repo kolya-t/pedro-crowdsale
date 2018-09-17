@@ -117,6 +117,8 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
         if (centsRaised > USDCENTS_HARD_CAP) {
             overageCents = centsRaised.sub(USDCENTS_HARD_CAP);
         }
+
+//        wallet.transfer(weiRaised); // todo: calculate
     }
 
     /**

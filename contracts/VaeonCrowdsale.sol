@@ -87,8 +87,6 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
         );
 
         _updatePurchasingState(_beneficiary, weiAmount);
-
-        _forwardFunds();
         _postValidatePurchase(_beneficiary, weiAmount);
     }
 

@@ -48,6 +48,24 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         return whitelist[_address];
     }
 
+    function refundWLOnce() public {
+        require(isFinalized);
+        require(!isWhitelisted(msg.sender));
+        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
+        require(wrapper.isPending);
+        require(wrapper.purchases.length > 0);
+
+        uint lastIndex = wrapper.purchases.length - 1;
+        Purchase storage purchase = wrapper.purchases[lastIndex];
+        msg.sender.transfer(purchase.contributedWei);
+        delete wrapper.purchases[lastIndex];
+        wrapper.purchases.length--;
+
+        if (wrapper.purchases.length == 0) {
+            delete pendPurchases[msg.sender];
+        }
+    }
+
     function refundWL() public {
         require(isFinalized);
         require(!isWhitelisted(msg.sender));

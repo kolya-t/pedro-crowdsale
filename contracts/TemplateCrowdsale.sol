@@ -6,25 +6,27 @@ import "./WhitelistedCrowdsale.sol";
 
 contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
     event Initialized();
-    event TimesChanged(uint startTime, uint endTime, uint oldStartTime, uint oldEndTime);
     bool public initialized = false;
 
-    constructor(MintableToken _token) public
-        Crowdsale(1000 * TOKEN_DECIMAL_MULTIPLIER, 0x9b37d7b266a41ef130c4625850c8484cf928000d, _token)
-        TimedCrowdsale(START_TIME > now ? START_TIME : now, 1507820400)
-        CappedCrowdsale(100000000000000000000000000000000000)
+    constructor(
+        MintableToken _token,
+        uint _ethTokenRate,
+        uint _ethUsdCentRate,
+        uint _stopAfterSeconds
+    )
+        public
+        Crowdsale(_ethTokenRate, COLD_WALLET, _token)
+        TimedCrowdsale(START_TIME > now ? START_TIME : now, END_TIME)
     {
         lastEosUsdUpdate = START_TIME;
+        ethUsdCentRate = _ethUsdCentRate;
+        stopAfter = _stopAfterSeconds;
     }
 
     function init() public onlyOwner {
         require(!initialized);
         initialized = true;
-
-        if (PAUSED) {
-            MainToken(token).pause();
-        }
-
+        MainToken(token).pause();
         transferOwnership(TARGET_USER);
         emit Initialized();
     }
@@ -34,8 +36,7 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
      * @return true if remained to achieve less than minimal
      */
     function hasClosed() public view returns (bool) {
-        bool remainValue = cap.sub(weiRaised) < 1000000000000000000;
-        return super.hasClosed() || remainValue;
+        return super.hasClosed();
     }
 
     /**
@@ -57,12 +58,12 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
         rate = _rate;
     }
 
-    function setUsdRaisedByEos(uint _usdCentsRaisedByEos, uint _ethUsdRate, uint _stopAfterSeconds) public onlyOwner {
+    function setUsdRaisedByEos(uint _usdCentsRaisedByEos, uint _ethUsdCentRate, uint _stopAfterSeconds) public onlyOwner {
         require(lastEosUsdUpdate + stopAfter >= now);
         require(_usdCentsRaisedByEos >= usdCentsRaisedByEos);
         lastEosUsdUpdate = now;
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
-        ethUsdRate = _ethUsdRate;
+        ethUsdCentRate = _ethUsdCentRate;
         stopAfter = _stopAfterSeconds;
     }
 
@@ -85,7 +86,7 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
                 tokens
             );
 
-            usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdRate).div(uint(100).mul(1 ether)));
+            usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdCentRate).div(1 ether));
         }
 
         _updatePurchasingState(_beneficiary, weiAmount);

@@ -4,7 +4,13 @@ const Crowdsale = artifacts.require('./TemplateCrowdsale.sol');
 module.exports = function (deployer, network, accounts) {
     deployer.deploy(Token)
         .then(function () {
-            return deployer.deploy(Crowdsale, Token.address);
+            return deployer.deploy(
+                Crowdsale,
+                Token.address,
+                1000,
+                21995,
+                86400
+            );
         });
 
 };

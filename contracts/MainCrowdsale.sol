@@ -1,14 +1,13 @@
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol";
-import "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/emission/MintedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 import "./MainToken.sol";
 import "./Consts.sol";
 
 
-contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale, CappedCrowdsale {
+contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
     struct Purchase {
         uint contributedWei;
         uint rate;
@@ -17,7 +16,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale, CappedC
 
     mapping (address => Purchase[]) public purchases;
 
-    uint public ethUsdRate = 20754; // div by 100
+    uint public ethUsdCentRate = 20754; // div by 100
     uint public stopAfter = 1 days;
 
     uint public usdCentsRaisedByEth;
@@ -38,7 +37,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale, CappedC
     }
 
     function hasClosed() public view returns (bool) {
-        return super.hasClosed() || capReached();
+        return super.hasClosed();
     }
 
     function hasEnded() public view returns (bool) {
@@ -47,15 +46,8 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale, CappedC
 
     function finalization() internal {
         super.finalization();
-
-        if (PAUSED) {
-            MainToken(token).unpause();
-        }
-
-        if (!CONTINUE_MINTING) {
-            require(MintableToken(token).finishMinting());
-        }
-
+        MainToken(token).unpause();
+        require(MintableToken(token).finishMinting());
         Ownable(token).transferOwnership(TARGET_USER);
     }
 

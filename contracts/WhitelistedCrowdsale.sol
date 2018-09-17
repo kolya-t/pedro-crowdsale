@@ -12,14 +12,14 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         whitelist[_address] = true;
         emit WhitelistedAddressAdded(_address);
 
-        PurchaseWrapper storage wrapper = pendPurchases[_address];
-        if (wrapper.isPending) {
-            for (uint i = 0; i < wrapper.purchases.length; i++) {
-                Purchase storage purchase = wrapper.purchases[i];
+        Purchase[] storage array = purchases[_address];
+        for (uint i = 0; i < array.length; i++) {
+            Purchase storage purchase = array[i];
+            if (purchase.isPending) {
                 weiRaised = weiRaised.add(purchase.contributedWei);
                 usdCentsRaisedByEth = usdCentsRaisedByEth.add(purchase.contributedWei.mul(ethUsdCentRate).div(1 ether));
+                purchase.isPending = false;
             }
-            wrapper.isPending = false;
         }
     }
 
@@ -51,30 +51,30 @@ contract WhitelistedCrowdsale is MainCrowdsale {
     function refundWLOnce() public {
         require(isFinalized);
         require(!isWhitelisted(msg.sender));
-        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
-        require(wrapper.isPending);
-        require(wrapper.purchases.length > 0);
+        Purchase[] storage array = purchases[msg.sender];
+        require(array.length > 0);
 
-        uint lastIndex = wrapper.purchases.length - 1;
-        Purchase storage purchase = wrapper.purchases[lastIndex];
+        uint lastIndex = array.length - 1;
+        Purchase storage purchase = array[lastIndex];
+        require(purchase.isPending);
         msg.sender.transfer(purchase.contributedWei);
-        delete wrapper.purchases[lastIndex];
-        wrapper.purchases.length--;
+        delete purchases[msg.sender][lastIndex];
+        purchases[msg.sender].length--;
 
-        if (wrapper.purchases.length == 0) {
-            delete pendPurchases[msg.sender];
+        if (purchases[msg.sender].length == 0) {
+            delete purchases[msg.sender];
         }
     }
 
     function refundWL() public {
         require(isFinalized);
         require(!isWhitelisted(msg.sender));
-        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
-        require(wrapper.isPending);
+        Purchase[] storage array = purchases[msg.sender];
+        require(array.length > 0);
 
         uint returnWei;
-        for (uint i = 0; i < wrapper.purchases.length; i++) {
-            Purchase storage purchase = wrapper.purchases[i];
+        for (uint i = 0; i < array.length; i++) {
+            Purchase storage purchase = array[i];
             returnWei = returnWei.add(purchase.contributedWei);
         }
 
@@ -82,6 +82,6 @@ contract WhitelistedCrowdsale is MainCrowdsale {
             msg.sender.transfer(returnWei);
         }
 
-        delete pendPurchases[msg.sender];
+        delete purchases[msg.sender];
     }
 }

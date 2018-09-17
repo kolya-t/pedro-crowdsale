@@ -93,7 +93,6 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
     }
 
     function _updatePurchasingState(address _beneficiary, uint256 _weiAmount) internal {
-        pendPurchases[_beneficiary].isPending = !isWhitelisted(_beneficiary);
-        pendPurchases[_beneficiary].purchases.push(Purchase(_weiAmount, rate, ethUsdCentRate));
+        purchases[_beneficiary].push(Purchase(_weiAmount, rate, ethUsdCentRate, !isWhitelisted(_beneficiary)));
     }
 }

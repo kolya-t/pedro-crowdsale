@@ -17,18 +17,14 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
     );
     event Initialized();
 
-    struct PurchaseWrapper {
-        bool isPending;
-        Purchase[] purchases;
-    }
-
     struct Purchase {
         uint contributedWei;
         uint rate;
         uint ethUsdCentRate;
+        bool isPending;
     }
 
-    mapping (address => PurchaseWrapper) public pendPurchases;
+    mapping (address => Purchase[]) public purchases;
 
     uint public ethUsdCentRate;
     uint public stopAfter;
@@ -56,11 +52,11 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
 
     function withdrawOnce() public {
         require(isFinalized);
-        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
-        require(wrapper.purchases.length > 0);
+        Purchase[] storage array = purchases[msg.sender];
+        require(array.length > 0);
 
-        uint lastIndex = wrapper.purchases.length - 1;
-        Purchase storage purchase = wrapper.purchases[lastIndex];
+        uint lastIndex = array.length - 1;
+        Purchase storage purchase = array[lastIndex];
 
         if (overageCents > 0) {
             uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
@@ -75,21 +71,21 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
             _deliverTokens(msg.sender, returnTokens);
         }
 
-        delete wrapper.purchases[lastIndex];
-        wrapper.purchases.length--;
-        if (wrapper.purchases.length == 0) {
-            delete pendPurchases[msg.sender];
+        delete purchases[msg.sender][lastIndex];
+        purchases[msg.sender].length--;
+        if (array.length == 0) {
+            delete purchases[msg.sender];
         }
     }
 
     function withdraw() public {
         require(isFinalized);
 
-        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
+        Purchase[] storage array = purchases[msg.sender];
         uint returnOverage;
         uint returnTokens;
-        for (uint i = 0; i < wrapper.purchases.length; i++) {
-            Purchase storage purchase = wrapper.purchases[i];
+        for (uint i = 0; i < array.length; i++) {
+            Purchase storage purchase = array[i];
 
             if (overageCents > 0) {
                 uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
@@ -108,7 +104,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
             _deliverTokens(msg.sender, returnTokens);
         }
 
-        delete pendPurchases[msg.sender];
+        delete purchases[msg.sender];
     }
 
     function finalization() internal {

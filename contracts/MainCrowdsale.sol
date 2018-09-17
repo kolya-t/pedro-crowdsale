@@ -8,40 +8,69 @@ import "./Consts.sol";
 
 
 contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
+    struct PurchaseWrapper {
+        bool isPending;
+        Purchase[] purchases;
+    }
+
     struct Purchase {
         uint contributedWei;
         uint rate;
-        bool isPending;
+        uint ethUsdCentRate;
     }
 
-    mapping (address => Purchase[]) public purchases;
+    mapping (address => PurchaseWrapper) public pendPurchases;
 
-    uint public ethUsdCentRate = 20754; // div by 100
-    uint public stopAfter = 1 days;
+    uint public ethUsdCentRate;
+    uint public stopAfter;
 
     uint public usdCentsRaisedByEth;
     uint public usdCentsRaisedByEos;
 
     uint public lastEosUsdUpdate;
 
+    uint public centsRaised;
+    uint public overageCents;
+
     function hasStarted() public view returns (bool) {
         return now >= openingTime;
     }
 
-    function startTime() public view returns (uint256) {
-        return openingTime;
-    }
-
-    function endTime() public view returns (uint256) {
-        return closingTime;
-    }
-
+    /**
+     * @dev override hasClosed to add minimal value logic
+     * @return true if remained to achieve less than minimal
+     */
     function hasClosed() public view returns (bool) {
-        return super.hasClosed();
+        return super.hasClosed() || usdCentsRaisedByEth.add(usdCentsRaisedByEos) >= USDCENTS_HARD_CAP;
     }
 
-    function hasEnded() public view returns (bool) {
-        return hasClosed();
+    function withdraw() public {
+        require(isFinalized);
+
+        PurchaseWrapper storage wrapper = pendPurchases[msg.sender];
+        uint returnOverage;
+        uint returnTokens;
+        for (uint i = 0; i < wrapper.purchases.length; i++) {
+            Purchase storage purchase = wrapper.purchases[i];
+
+            if (overageCents > 0) {
+                uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
+                returnOverage = returnOverage.add(
+                    purchase.contributedWei.mul(overageCents).mul(contributedCents).div(centsRaised));
+            }
+
+            returnTokens = returnTokens.add(purchase.contributedWei.mul(purchase.rate).div(1 ether));
+        }
+
+        if (returnOverage > 0) {
+            msg.sender.transfer(returnOverage);
+        }
+
+        if (returnTokens > 0) {
+            _deliverTokens(msg.sender, returnTokens);
+        }
+
+        delete pendPurchases[msg.sender];
     }
 
     function finalization() internal {
@@ -49,6 +78,11 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
         MainToken(token).unpause();
         require(MintableToken(token).finishMinting());
         Ownable(token).transferOwnership(TARGET_USER);
+
+        centsRaised = usdCentsRaisedByEth.add(usdCentsRaisedByEos);
+        if (centsRaised > USDCENTS_HARD_CAP) {
+            overageCents = centsRaised.sub(USDCENTS_HARD_CAP);
+        }
     }
 
     /**

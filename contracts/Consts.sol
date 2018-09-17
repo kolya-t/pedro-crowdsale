@@ -8,8 +8,8 @@ contract Consts {
     uint8 public constant TOKEN_DECIMALS_UINT8 = 10;
     uint public constant TOKEN_DECIMAL_MULTIPLIER = 10 ** TOKEN_DECIMALS;
 
-    string public constant TOKEN_NAME = "Pedro Token";
-    string public constant TOKEN_SYMBOL = "PEDRO";
+    string public constant TOKEN_NAME = "Vaeon Token";
+    string public constant TOKEN_SYMBOL = "VAEO";
     address public constant TARGET_USER = 0x8ffff2c69f000c790809f6b8f9abfcbaab46b322;
     address public constant COLD_WALLET = 0x9b37d7b266a41ef130c4625850c8484cf928000d;
 

@@ -4,7 +4,14 @@ import "./MainCrowdsale.sol";
 import "./WhitelistedCrowdsale.sol";
 
 
-contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
+contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
+    event TokenPurchase(
+        address indexed purchaser,
+        address indexed beneficiary,
+        uint256 value,
+        uint256 rate,
+        uint256 ethUsdCentRate
+    );
     event Initialized();
     bool public initialized = false;
 
@@ -32,14 +39,6 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
     }
 
     /**
-     * @dev override hasClosed to add minimal value logic
-     * @return true if remained to achieve less than minimal
-     */
-    function hasClosed() public view returns (bool) {
-        return super.hasClosed();
-    }
-
-    /**
      * @dev override purchase validation to add extra value logic.
      * @return true if sended more than minimal value
      */
@@ -58,13 +57,26 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
         rate = _rate;
     }
 
-    function setUsdRaisedByEos(uint _usdCentsRaisedByEos, uint _ethUsdCentRate, uint _stopAfterSeconds) public onlyOwner {
+    function finalize() public {
+        revert();
+    }
+
+    function dailyCheck(uint _usdCentsRaisedByEos, uint _ethUsdCentRate, uint _stopAfterSeconds) public onlyOwner {
         require(lastEosUsdUpdate + stopAfter >= now);
         require(_usdCentsRaisedByEos >= usdCentsRaisedByEos);
         lastEosUsdUpdate = now;
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
         ethUsdCentRate = _ethUsdCentRate;
         stopAfter = _stopAfterSeconds;
+
+        if (hasClosed()) {
+            require(!isFinalized);
+
+            finalization();
+            emit Finalized();
+
+            isFinalized = true;
+        }
     }
 
     function buyTokens(address _beneficiary) public payable {
@@ -72,22 +84,17 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
         _preValidatePurchase(_beneficiary, weiAmount);
 
         if (isWhitelisted(_beneficiary)) {
-            // calculate token amount to be created
-            uint256 tokens = _getTokenAmount(weiAmount);
-
-            // update state
             weiRaised = weiRaised.add(weiAmount);
-
-            _processPurchase(_beneficiary, tokens);
-            emit TokenPurchase(
-                msg.sender,
-                _beneficiary,
-                weiAmount,
-                tokens
-            );
-
             usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdCentRate).div(1 ether));
         }
+
+        emit TokenPurchase(
+            msg.sender,
+            _beneficiary,
+            weiAmount,
+            rate,
+            ethUsdCentRate
+        );
 
         _updatePurchasingState(_beneficiary, weiAmount);
 
@@ -96,6 +103,7 @@ contract TemplateCrowdsale is Consts, WhitelistedCrowdsale {
     }
 
     function _updatePurchasingState(address _beneficiary, uint256 _weiAmount) internal {
-        purchases[_beneficiary].push(Purchase(_weiAmount, rate, !isWhitelisted(_beneficiary)));
+        pendPurchases[_beneficiary].isPending = !isWhitelisted(_beneficiary);
+        pendPurchases[_beneficiary].purchases.push(Purchase(_weiAmount, rate, ethUsdCentRate));
     }
 }

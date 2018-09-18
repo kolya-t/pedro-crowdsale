@@ -12,7 +12,7 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
         uint _stopAfterSeconds
     )
         public
-        Crowdsale(_ethTokenRate, COLD_WALLET, _token)
+        Crowdsale(_ethTokenRate * TOKEN_DECIMAL_MULTIPLIER, COLD_WALLET, _token)
         TimedCrowdsale(START_TIME > now ? START_TIME : now, END_TIME)
     {
         lastDailyCheckTimestamp = START_TIME;
@@ -43,18 +43,23 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }
 
-    function setRate(uint _rate) public onlyOwner {
-        rate = _rate;
-    }
-
     function finalize() public {
         revert();
     }
 
-    function dailyCheck(uint _usdCentsRaisedByEos, uint _ethUsdCentRate, uint _stopAfterSeconds) public onlyOwner {
+    function dailyCheck(
+        uint _usdCentsRaisedByEos,
+        uint _rate,
+        uint _ethUsdCentRate,
+        uint _stopAfterSeconds
+    )
+        public
+        onlyOwner
+    {
         require(lastDailyCheckTimestamp + stopAfterSeconds <= now);
         require(_usdCentsRaisedByEos >= usdCentsRaisedByEos);
         lastDailyCheckTimestamp = now;
+        rate = _rate * TOKEN_DECIMAL_MULTIPLIER;
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
         ethUsdCentRate = _ethUsdCentRate;
         stopAfterSeconds = _stopAfterSeconds;

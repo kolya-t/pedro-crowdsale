@@ -1,10 +1,9 @@
 pragma solidity ^0.4.23;
 
-import "./MainCrowdsale.sol";
 import "./WhitelistedCrowdsale.sol";
 
 
-contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
+contract VaeonCrowdsale is WhitelistedCrowdsale {
     constructor(
         VaeonToken _token,
         uint _ethTokenRate,
@@ -81,6 +80,8 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
         if (isWhitelisted(_beneficiary)) {
             weiRaised = weiRaised.add(weiAmount);
             usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdCentRate).div(1 ether));
+            uint tokens = weiRaised.mul(rate).div(1 ether);
+            MintableToken(token).mint(address(this), tokens);
         }
 
         emit TokenPurchase(

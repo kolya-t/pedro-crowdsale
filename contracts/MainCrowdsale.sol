@@ -1,13 +1,12 @@
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/crowdsale/distribution/FinalizableCrowdsale.sol";
-import "openzeppelin-solidity/contracts/crowdsale/emission/MintedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 import "./VaeonToken.sol";
 import "./Consts.sol";
 
 
-contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
+contract MainCrowdsale is Consts, FinalizableCrowdsale {
     event TokenPurchase(
         address indexed purchaser,
         address indexed beneficiary,
@@ -118,18 +117,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
         }
 
         if (centsRaised > 0) {
-            COLD_WALLET.transfer(USDCENTS_HARD_CAP.mul(weiRaised).div(centsRaised));
+            COLD_WALLET.transfer(USDCENTS_HARD_CAP.div(centsRaised).mul(weiRaised));
         }
-    }
-
-    /**
-     * @dev Override to extend the way in which ether is converted to tokens.
-     * @param _weiAmount Value in wei to be converted into tokens
-     * @return Number of tokens that can be purchased with the specified _weiAmount
-     */
-    function _getTokenAmount(uint256 _weiAmount)
-        internal view returns (uint256)
-    {
-        return _weiAmount.mul(rate).div(1 ether);
     }
 }

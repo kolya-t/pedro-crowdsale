@@ -32,6 +32,8 @@ contract WhitelistedCrowdsale is MainCrowdsale {
 
         weiRaised = weiRaised.add(purchase.contributedWei);
         usdCentsRaisedByEth = usdCentsRaisedByEth.add(purchase.contributedWei.mul(ethUsdCentRate).div(1 ether));
+        uint tokens = weiRaised.mul(purchase.rate).div(1 ether);
+        MintableToken(token).mint(address(this), tokens);
         purchase.isPending = false;
 
         whitelist[_address] = true;

@@ -60,7 +60,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
 
         if (overageCents > 0) {
             uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
-            uint returnOverage = purchase.contributedWei.mul(overageCents).mul(contributedCents).div(centsRaised);
+            uint returnOverage = overageCents.mul(contributedCents).div(centsRaised.mul(ethUsdCentRate));
             if (returnOverage > 0) {
                 msg.sender.transfer(returnOverage);
             }
@@ -90,7 +90,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
             if (overageCents > 0) {
                 uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
                 returnOverage = returnOverage.add(
-                    purchase.contributedWei.mul(overageCents).mul(contributedCents).div(centsRaised));
+                    overageCents.mul(contributedCents).div(centsRaised.mul(ethUsdCentRate)));
             }
 
             returnTokens = returnTokens.add(purchase.contributedWei.mul(purchase.rate).div(1 ether));
@@ -118,7 +118,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
             overageCents = centsRaised.sub(USDCENTS_HARD_CAP);
         }
 
-//        wallet.transfer(weiRaised); // todo: calculate
+        COLD_WALLET.transfer(USDCENTS_HARD_CAP.mul(weiRaised).div(centsRaised));
     }
 
     /**

@@ -41,7 +41,6 @@ contract('Token', accounts => {
         await token.owner().should.eventually.be.equals(TOKEN_OWNER);
     });
 
-
     it('#2 minting', async () => {
         const token = await Token.new();
 
@@ -68,11 +67,4 @@ contract('Token', accounts => {
         await token.burn(tokensToMint + 1).should.eventually.be.rejected;
         await token.burn(tokensToMint / 2);
     });
-
-
-
-
-
 });
-
-

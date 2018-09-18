@@ -14,5 +14,5 @@ contract Consts {
     address public constant COLD_WALLET = 0x5e2909baee620b3aac56ab8dfeb1b4f096933705;
 
     uint public constant START_TIME = 1507734000;
-    uint public constant END_TIME = 1507820400;
+    uint public constant END_TIME = 1510326000;
 }

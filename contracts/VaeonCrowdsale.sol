@@ -15,9 +15,9 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
         Crowdsale(_ethTokenRate, COLD_WALLET, _token)
         TimedCrowdsale(START_TIME > now ? START_TIME : now, END_TIME)
     {
-        lastEosUsdUpdate = START_TIME;
+        lastDailyCheckTimestamp = START_TIME;
         ethUsdCentRate = _ethUsdCentRate;
-        stopAfter = _stopAfterSeconds;
+        stopAfterSeconds = _stopAfterSeconds;
     }
 
     function init() public onlyOwner {
@@ -39,7 +39,7 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
         internal
     {
         require(msg.value >= MIN_INVESTMENT);
-        require(now < lastEosUsdUpdate + stopAfter);
+        require(now < lastDailyCheckTimestamp + stopAfterSeconds);
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }
 
@@ -52,12 +52,12 @@ contract VaeonCrowdsale is Consts, WhitelistedCrowdsale {
     }
 
     function dailyCheck(uint _usdCentsRaisedByEos, uint _ethUsdCentRate, uint _stopAfterSeconds) public onlyOwner {
-        require(lastEosUsdUpdate + stopAfter >= now);
+        require(lastDailyCheckTimestamp + stopAfterSeconds <= now);
         require(_usdCentsRaisedByEos >= usdCentsRaisedByEos);
-        lastEosUsdUpdate = now;
+        lastDailyCheckTimestamp = now;
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
         ethUsdCentRate = _ethUsdCentRate;
-        stopAfter = _stopAfterSeconds;
+        stopAfterSeconds = _stopAfterSeconds;
 
         if (hasClosed()) {
             require(!isFinalized);

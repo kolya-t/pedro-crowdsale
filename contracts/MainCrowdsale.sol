@@ -26,17 +26,16 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
 
     mapping (address => Purchase[]) public purchases;
 
-    uint public ethUsdCentRate;
-    uint public stopAfter;
+    bool public initialized;
 
+    uint public lastDailyCheckTimestamp;
+    uint public stopAfterSeconds;
+
+    uint public ethUsdCentRate;
     uint public usdCentsRaisedByEth;
     uint public usdCentsRaisedByEos;
-
-    uint public lastEosUsdUpdate;
-
-    uint public centsRaised;
     uint public overageCents;
-    bool public initialized;
+    uint private centsRaised;
 
     function hasStarted() public view returns (bool) {
         return now >= openingTime;
@@ -118,7 +117,9 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale, MintedCrowdsale {
             overageCents = centsRaised.sub(USDCENTS_HARD_CAP);
         }
 
-        COLD_WALLET.transfer(USDCENTS_HARD_CAP.mul(weiRaised).div(centsRaised));
+        if (centsRaised > 0) {
+            COLD_WALLET.transfer(USDCENTS_HARD_CAP.mul(weiRaised).div(centsRaised));
+        }
     }
 
     /**

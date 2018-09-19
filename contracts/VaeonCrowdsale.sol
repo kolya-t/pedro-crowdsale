@@ -8,22 +8,27 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         VaeonToken _token,
         uint _ethTokenRate,
         uint _ethUsdCentRate,
-        uint _stopAfterSeconds
+        uint _stopAfterSeconds,
+        uint _startTime,
+        uint _endTime,
+        address _targetUser,
+        address _coldWallet
     )
         public
-        Crowdsale(_ethTokenRate * TOKEN_DECIMAL_MULTIPLIER, COLD_WALLET, _token)
-        TimedCrowdsale(START_TIME > now ? START_TIME : now, END_TIME)
+        Crowdsale(_ethTokenRate * TOKEN_DECIMAL_MULTIPLIER, _coldWallet, _token)
+        TimedCrowdsale(_startTime > now ? _startTime : now, _endTime)
     {
-        lastDailyCheckTimestamp = START_TIME;
+        lastDailyCheckTimestamp = _startTime;
         ethUsdCentRate = _ethUsdCentRate;
         stopAfterSeconds = _stopAfterSeconds;
+        targetUser = _targetUser;
     }
 
     function init() public onlyOwner {
         require(!initialized);
         initialized = true;
         VaeonToken(token).pause();
-        transferOwnership(TARGET_USER);
+        transferOwnership(targetUser);
         emit Initialized();
     }
 

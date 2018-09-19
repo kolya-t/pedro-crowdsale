@@ -9,10 +9,13 @@ module.exports = function (deployer, network, accounts) {
                 Token.address,
                 1000,
                 21995,
-                86400
+                86400,
+                1507734000,
+                1510326000,
+                accounts[0],
+                accounts[1]
             );
         });
-
 };
 
 

@@ -26,6 +26,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
     mapping (address => Purchase[]) public purchases;
 
     bool public initialized;
+    address public targetUser;
 
     uint public lastDailyCheckTimestamp;
     uint public stopAfterSeconds;
@@ -109,7 +110,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
         super.finalization();
         VaeonToken(token).unpause();
         require(MintableToken(token).finishMinting());
-        Ownable(token).transferOwnership(TARGET_USER);
+        Ownable(token).transferOwnership(targetUser);
 
         centsRaised = usdCentsRaisedByEth.add(usdCentsRaisedByEos);
         if (centsRaised > USDCENTS_HARD_CAP) {
@@ -118,7 +119,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
 
         if (centsRaised > 0) {
             uint centsForOwner = centsRaised < USDCENTS_HARD_CAP ? centsRaised : USDCENTS_HARD_CAP;
-            COLD_WALLET.transfer(centsForOwner.mul(weiRaised).div(centsRaised));
+            wallet.transfer(centsForOwner.mul(weiRaised).div(centsRaised));
         }
     }
 }

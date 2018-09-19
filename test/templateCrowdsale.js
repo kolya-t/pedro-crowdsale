@@ -34,7 +34,16 @@ contract('TemplateCrowdsale', accounts => {
 
     const createCrowdsale = async () => {
         const token = await Token.new();
-        const crowdsale = await Crowdsale.new(token.address, 1000, 25000, 86400);
+        const crowdsale = await Crowdsale.new(
+            token.address,
+            1000,
+            25000,
+            86400,
+            1507734000,
+            1510326000,
+            TARGET_USER,
+            COLD_WALLET
+        );
         await token.transferOwnership(crowdsale.address);
         await crowdsale.init();
         return crowdsale;
@@ -43,14 +52,6 @@ contract('TemplateCrowdsale', accounts => {
     const getBlockchainTimestamp = async () => {
         const latestBlock = await web3async(web3.eth, web3.eth.getBlock, 'latest');
         return latestBlock.timestamp;
-    };
-
-    const getRate = async (weiAmount, crowdsale) => {
-        return BASE_RATE.mul(TOKEN_DECIMAL_MULTIPLIER);
-    };
-
-    const tokensForWei = async (weiAmount, crowdsale) => {
-        return (await getRate(weiAmount, crowdsale)).mul(weiAmount).div(ETHER).floor();
     };
 
     beforeEach(async () => {
@@ -64,8 +65,17 @@ contract('TemplateCrowdsale', accounts => {
 
     it('#0 gas usage', async () => {
         const token = await Token.new();
-        await estimateConstructGas(Crowdsale, token.address, 1000, 25000, 86400)
-            .then(console.info);
+        await estimateConstructGas(
+            Crowdsale,
+            token.address,
+            1000,
+            25000,
+            86400,
+            1507734000,
+            1510326000,
+            TARGET_USER,
+            COLD_WALLET
+        ).then(console.info);
     });
 
     it('#0 balances', () => {

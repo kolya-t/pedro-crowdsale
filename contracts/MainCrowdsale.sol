@@ -117,7 +117,8 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
         }
 
         if (centsRaised > 0) {
-            COLD_WALLET.transfer(USDCENTS_HARD_CAP.mul(weiRaised).div(centsRaised));
+            uint centsForOwner = centsRaised < USDCENTS_HARD_CAP ? centsRaised : USDCENTS_HARD_CAP;
+            COLD_WALLET.transfer(centsForOwner.mul(weiRaised).div(centsRaised));
         }
     }
 }

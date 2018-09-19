@@ -337,6 +337,20 @@ contract('TemplateCrowdsale', accounts => {
         (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(1000).mul(10000000000));
         (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(0);
     });
+
+    it('#13 check cannot sendTransaction after FRQUENCY time', async () => {
+        const crowdsale = await createCrowdsale();
+        await timeTo(START_TIME + 86401);
+
+        await crowdsale.addAddressToWhitelist(BUYER_1, { from: TARGET_USER });
+
+        let wei = web3.toWei(new BigNumber(100000), 'ether');
+        await crowdsale.sendTransaction({ from: BUYER_1, value: wei }).should.eventually.be.rejected;
+
+        await crowdsale.dailyCheck(0, 1000, 20000, 86400, { from: TARGET_USER });
+
+        await crowdsale.sendTransaction({ from: BUYER_1, value: wei });
+    });
 });
 
 

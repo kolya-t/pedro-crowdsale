@@ -1,8 +1,8 @@
 {
-  "name": "pedro-crowdsale",
+  "name": "vaeon-crowdsale",
   "version": "0.1.0",
   "main": "index.js",
-  "repository": "https://github.com/kolya-t/pedro-crowdsale.git",
+  "repository": "https://github.com/kolya-t/vaeon-crowdsale.git",
   "author": "Nikolay Toporkov <toporkov.kolya96@gmail.com>",
   "license": "MIT",
   "scripts": {

@@ -58,7 +58,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
 
         if (overageCents > 0) {
             uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
-            uint returnOverage = overageCents.mul(contributedCents).div(centsRaised.mul(ethUsdCentRate));
+            uint returnOverage = overageCents.mul(contributedCents).div(centsRaised.mul(purchase.ethUsdCentRate));
             if (returnOverage > 0) {
                 msg.sender.transfer(returnOverage);
             }
@@ -88,7 +88,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
             if (overageCents > 0) {
                 uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
                 returnOverage = returnOverage.add(
-                    overageCents.mul(contributedCents).div(centsRaised.mul(ethUsdCentRate)));
+                    overageCents.mul(contributedCents).div(centsRaised.mul(purchase.ethUsdCentRate)));
             }
 
             returnTokens = returnTokens.add(purchase.contributedWei.mul(purchase.rate).div(1 ether));

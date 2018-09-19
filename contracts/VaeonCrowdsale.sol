@@ -82,15 +82,15 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
             usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdCentRate).div(1 ether));
             uint tokens = weiRaised.mul(rate).div(1 ether);
             MintableToken(token).mint(address(this), tokens);
-        }
 
-        emit TokenPurchase(
-            msg.sender,
-            _beneficiary,
-            weiAmount,
-            rate,
-            ethUsdCentRate
-        );
+            emit TokenPurchase(
+                msg.sender,
+                _beneficiary,
+                weiAmount,
+                rate,
+                ethUsdCentRate
+            );
+        }
 
         _updatePurchasingState(_beneficiary, weiAmount);
         _postValidatePurchase(_beneficiary, weiAmount);

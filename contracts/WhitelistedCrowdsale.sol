@@ -36,6 +36,14 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         MintableToken(token).mint(address(this), tokens);
         purchase.isPending = false;
 
+        emit TokenPurchase(
+            _address,
+            _address,
+            purchase.contributedWei,
+            purchase.rate,
+            purchase.ethUsdCentRate
+        );
+
         whitelist[_address] = true;
         emit WhitelistedAddressAdded(_address);
     }

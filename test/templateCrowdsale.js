@@ -19,7 +19,7 @@ const TOKEN_DECIMAL_MULTIPLIER = new BigNumber(10).toPower(10); // eslint-disabl
 const ETHER = web3.toWei(1, 'ether');
 const GAS_PRICE = web3.toWei(100, 'gwei');
 
-const MIN_VALUE_WEI = new BigNumber('10000000000000000');
+const MIN_VALUE_WEI = new BigNumber('100000000000000000');
 
 contract('TemplateCrowdsale', accounts => {
     const OWNER = accounts[0];

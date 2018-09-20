@@ -152,14 +152,14 @@ contract('TemplateCrowdsale', accounts => {
 
     it('#6 check that dailyCheck successfully changing variables', async () => {
         const crowdsale = await createCrowdsale();
-        const stopAfterSeconds = Number(await crowdsale.stopAfterSeconds());
+        const dailyCheckStopTimestamp = Number(await crowdsale.dailyCheckStopTimestamp());
 
-        await crowdsale.dailyCheck(0, 50000, stopAfterSeconds, { from: TARGET_USER }).should.eventually.be.rejected;
+        await crowdsale.dailyCheck(0, 50000, 86400, { from: TARGET_USER }).should.eventually.be.rejected;
 
-        await timeTo(START_TIME + stopAfterSeconds);
-        await crowdsale.dailyCheck(0, 50000, stopAfterSeconds - 10, { from: TARGET_USER });
+        await timeTo(dailyCheckStopTimestamp);
+        await crowdsale.dailyCheck(0, 50000, 86400 - 10, { from: TARGET_USER });
 
-        (await crowdsale.stopAfterSeconds()).should.bignumber.be.equal(stopAfterSeconds - 10);
+        (await crowdsale.dailyCheckStopTimestamp()).should.bignumber.be.equal(dailyCheckStopTimestamp + 86400 - 10);
         const ethUsdCentRate = await crowdsale.ethUsdCentRate();
         ethUsdCentRate.should.bignumber.be.equal(50000);
 

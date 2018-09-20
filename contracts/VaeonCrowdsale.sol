@@ -18,9 +18,8 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         Crowdsale(_tknCentRate, _coldWallet, _token)
         TimedCrowdsale(_startTime > now ? _startTime : now, _endTime)
     {
-        lastDailyCheckTimestamp = _startTime;
         ethUsdCentRate = _ethUsdCentRate;
-        stopAfterSeconds = _stopAfterSeconds;
+        dailyCheckStopTimestamp = _startTime + _stopAfterSeconds;
         targetUser = _targetUser;
     }
 
@@ -43,7 +42,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         internal
     {
         require(msg.value >= MIN_INVESTMENT);
-        require(now < lastDailyCheckTimestamp + stopAfterSeconds);
+        require(now < dailyCheckStopTimestamp);
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }
 
@@ -59,13 +58,12 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         public
         onlyOwner
     {
-        require(lastDailyCheckTimestamp + stopAfterSeconds <= now);
+        require(dailyCheckStopTimestamp <= now);
         require(_usdCentsRaisedByEos >= usdCentsRaisedByEos);
-        lastDailyCheckTimestamp = now;
+        dailyCheckStopTimestamp = now + _stopAfterSeconds;
 
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
         ethUsdCentRate = _ethUsdCentRate;
-        stopAfterSeconds = _stopAfterSeconds;
 
         if (hasClosed()) {
             require(!isFinalized);

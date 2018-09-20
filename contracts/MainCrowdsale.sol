@@ -28,8 +28,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
     bool public initialized;
     address public targetUser;
 
-    uint public lastDailyCheckTimestamp;
-    uint public stopAfterSeconds;
+    uint public dailyCheckStopTimestamp;
 
     uint public ethUsdCentRate;
     uint public usdCentsRaisedByEth;

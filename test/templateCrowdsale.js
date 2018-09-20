@@ -11,13 +11,9 @@ const { web3async, estimateConstructGas } = require('sc-library/test-utils/web3U
 const Crowdsale = artifacts.require('./VaeonCrowdsale.sol');
 const Token = artifacts.require('./VaeonToken.sol');
 
-const BASE_RATE = new BigNumber('1000');
 const USDCENTS_HARD_CAP = new BigNumber('3000000000');
 const START_TIME = 1507734000; // eslint-disable-line no-undef
 const END_TIME = 1510326000; // eslint-disable-line no-undef
-const TOKEN_DECIMAL_MULTIPLIER = new BigNumber(10).toPower(10); // eslint-disable-line no-undef
-const ETHER = web3.toWei(1, 'ether');
-const GAS_PRICE = web3.toWei(100, 'gwei');
 
 const MIN_VALUE_WEI = new BigNumber('100000000000000000');
 
@@ -25,7 +21,6 @@ contract('TemplateCrowdsale', accounts => {
     const OWNER = accounts[0];
     const BUYER_1 = accounts[1];
     const BUYER_2 = accounts[2];
-    const BUYER_3 = accounts[3];
     const COLD_WALLET = accounts[4];
     const TARGET_USER = accounts[5];
 
@@ -36,7 +31,7 @@ contract('TemplateCrowdsale', accounts => {
         const token = await Token.new();
         const crowdsale = await Crowdsale.new(
             token.address,
-            1000,
+            75000000000,
             25000,
             86400,
             1507734000,
@@ -68,7 +63,7 @@ contract('TemplateCrowdsale', accounts => {
         await estimateConstructGas(
             Crowdsale,
             token.address,
-            1000,
+            75000000000,
             25000,
             86400,
             1507734000,
@@ -159,10 +154,10 @@ contract('TemplateCrowdsale', accounts => {
         const crowdsale = await createCrowdsale();
         const stopAfterSeconds = Number(await crowdsale.stopAfterSeconds());
 
-        await crowdsale.dailyCheck(0, 1000, 50000, stopAfterSeconds, { from: TARGET_USER }).should.eventually.be.rejected;
+        await crowdsale.dailyCheck(0, 50000, stopAfterSeconds, { from: TARGET_USER }).should.eventually.be.rejected;
 
         await timeTo(START_TIME + stopAfterSeconds);
-        await crowdsale.dailyCheck(0, 1000, 50000, stopAfterSeconds - 10, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 50000, stopAfterSeconds - 10, { from: TARGET_USER });
 
         (await crowdsale.stopAfterSeconds()).should.bignumber.be.equal(stopAfterSeconds - 10);
         const ethUsdCentRate = await crowdsale.ethUsdCentRate();
@@ -193,7 +188,7 @@ contract('TemplateCrowdsale', accounts => {
         await timeTo(END_TIME + 1);
         // finalize after the END time
         await crowdsale.finalize({ from: TARGET_USER }).should.eventually.be.rejected;
-        await crowdsale.dailyCheck(0, 1000, 50000, 0, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 50000, 0, { from: TARGET_USER });
 
         // mint must be disabled
         await token.mint(BUYER_2, 10, { from: TARGET_USER }).should.eventually.be.rejected;
@@ -272,12 +267,12 @@ contract('TemplateCrowdsale', accounts => {
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei });
 
         await increaseTime(86400);
-        await crowdsale.dailyCheck(0, 1000, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 20000, 86400, { from: TARGET_USER });
         wei = web3.toWei(new BigNumber(50000), 'ether');
         await crowdsale.sendTransaction({ from: BUYER_2, value: wei });
 
         await increaseTime(86400);
-        await crowdsale.dailyCheck(0, 1000, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 20000, 86400, { from: TARGET_USER });
 
         const coldWalletBalanceDifference = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
         const ownerReward = new BigNumber(30).mul(web3.toWei(150000, 'ether')).div(35).floor();
@@ -300,8 +295,8 @@ contract('TemplateCrowdsale', accounts => {
             new BigNumber(5000000).mul(10000000).div(new BigNumber(35000000).mul(200)).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(1000).mul(10000000000));
-        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(50000).mul(1000).mul(10000000000));
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(30).div(35).mul(25000000).div(0.075).floor());
+        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(30).div(35).mul(10000000).div(0.075).floor());
     });
 
     it('#12 check refund not whitelisted', async () => {
@@ -316,12 +311,12 @@ contract('TemplateCrowdsale', accounts => {
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei1 });
 
         await increaseTime(86400);
-        await crowdsale.dailyCheck(0, 1000, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 20000, 86400, { from: TARGET_USER });
         const wei2 = web3.toWei(new BigNumber(50000), 'ether');
         await crowdsale.sendTransaction({ from: BUYER_2, value: wei2 });
 
         await timeTo(END_TIME + 1);
-        await crowdsale.dailyCheck(0, 1000, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 20000, 86400, { from: TARGET_USER });
 
         const coldWalletBalanceDifference = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
         coldWalletBalanceDifference.should.bignumber.be.equal(web3.toWei(100000, 'ether'));
@@ -344,7 +339,7 @@ contract('TemplateCrowdsale', accounts => {
         csBalanceAfterFirstWithdraw.sub(csBalanceAfterRefund).should.be.bignumber.equal(wei2);
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(1000).mul(10000000000));
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(25000000).div(0.075).floor());
         (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(0);
     });
 
@@ -357,7 +352,7 @@ contract('TemplateCrowdsale', accounts => {
         let wei = web3.toWei(new BigNumber(100000), 'ether');
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei }).should.eventually.be.rejected;
 
-        await crowdsale.dailyCheck(0, 1000, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 20000, 86400, { from: TARGET_USER });
 
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei });
     });
@@ -368,13 +363,13 @@ contract('TemplateCrowdsale', accounts => {
         await increaseTime(START_TIME - now);
 
         const coldWalletSourceBalance = await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET);
-        await crowdsale.addAddressesToWhitelist([BUYER_1, BUYER_2], { from: TARGET_USER });
+        await crowdsale.addAddressToWhitelist(BUYER_1, { from: TARGET_USER });
 
         let wei = web3.toWei(new BigNumber(100000), 'ether');
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei });
 
         await increaseTime(86400);
-        await crowdsale.dailyCheck(1000000000, 1000, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(1000000000, 20000, 86400, { from: TARGET_USER });
 
         const coldWalletBalanceDifference = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
         const ownerReward = new BigNumber(30).mul(web3.toWei(100000, 'ether')).div(35).floor();
@@ -391,7 +386,7 @@ contract('TemplateCrowdsale', accounts => {
             new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(1000).mul(10000000000));
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(25000000).mul(30).div(35).div(0.075).floor());
     });
 });
 

@@ -36,6 +36,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
     uint public usdCentsRaisedByEos;
     uint public overageCents;
     uint private centsRaised;
+    uint private centsForOwner;
 
     function hasStarted() public view returns (bool) {
         return now >= openingTime;
@@ -64,8 +65,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
                 msg.sender.transfer(returnOverage);
             }
         }
-
-        uint returnTokens = purchase.contributedWei.mul(purchase.rate).div(1 ether);
+        uint returnTokens = contributedCents.mul(TOKEN_DECIMAL_MULTIPLIER).mul(centsForOwner).div(centsRaised).div(purchase.rate);
         if (returnTokens > 0) {
             _deliverTokens(msg.sender, returnTokens);
         }
@@ -86,13 +86,13 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
         for (uint i = 0; i < array.length; i++) {
             Purchase storage purchase = array[i];
 
+            uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
             if (overageCents > 0) {
-                uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
                 returnOverage = returnOverage.add(
                     overageCents.mul(contributedCents).div(centsRaised.mul(purchase.ethUsdCentRate)));
             }
 
-            returnTokens = returnTokens.add(purchase.contributedWei.mul(purchase.rate).div(1 ether));
+            returnTokens = returnTokens.add(contributedCents.mul(TOKEN_DECIMAL_MULTIPLIER).mul(centsForOwner).div(centsRaised).div(purchase.rate));
         }
 
         if (returnOverage > 0) {
@@ -118,7 +118,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
         }
 
         if (centsRaised > 0) {
-            uint centsForOwner = centsRaised < USDCENTS_HARD_CAP ? centsRaised : USDCENTS_HARD_CAP;
+            centsForOwner = centsRaised < USDCENTS_HARD_CAP ? centsRaised : USDCENTS_HARD_CAP;
             wallet.transfer(centsForOwner.mul(weiRaised).div(centsRaised));
         }
     }

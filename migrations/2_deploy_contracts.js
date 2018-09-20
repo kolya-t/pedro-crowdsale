@@ -7,7 +7,7 @@ module.exports = function (deployer, network, accounts) {
             return deployer.deploy(
                 Crowdsale,
                 Token.address,
-                1000,
+                75000000000,
                 21995,
                 86400,
                 1507734000,

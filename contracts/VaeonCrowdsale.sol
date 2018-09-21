@@ -4,6 +4,8 @@ import "./WhitelistedCrowdsale.sol";
 
 
 contract VaeonCrowdsale is WhitelistedCrowdsale {
+    event TimesChanged(uint startTime, uint endTime, uint oldStartTime, uint oldEndTime);
+
     constructor(
         VaeonToken _token,
         uint _tknCentRate, // 1 tkn = (_tknCentRate / 10 ^ decimals) cents
@@ -101,5 +103,55 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
 
     function _updatePurchasingState(address _beneficiary, uint256 _weiAmount) internal {
         purchases[_beneficiary].push(Purchase(_weiAmount, rate, ethUsdCentRate, !isWhitelisted(_beneficiary)));
+    }
+
+    function setStartTime(uint _startTime) public onlyOwner {
+        // only if CS was not started
+        require(now < openingTime);
+        // only move time to future
+        require(_startTime > openingTime);
+        require(_startTime < closingTime);
+        emit TimesChanged(_startTime, closingTime, openingTime, closingTime);
+        openingTime = _startTime;
+    }
+
+    function setEndTime(uint _endTime) public onlyOwner {
+        // only if CS was not ended
+        require(now < closingTime);
+        // only if new end time in future
+        require(now < _endTime);
+        require(_endTime > openingTime);
+        emit TimesChanged(openingTime, _endTime, openingTime, closingTime);
+        closingTime = _endTime;
+    }
+
+    function setTimes(uint _startTime, uint _endTime) public onlyOwner {
+        require(_endTime > _startTime);
+        uint oldStartTime = openingTime;
+        uint oldEndTime = closingTime;
+        bool changed = false;
+        if (_startTime != oldStartTime) {
+            require(_startTime > now);
+            // only if CS was not started
+            require(now < oldStartTime);
+            // only move time to future
+            require(_startTime > oldStartTime);
+
+            openingTime = _startTime;
+            changed = true;
+        }
+        if (_endTime != oldEndTime) {
+            // only if CS was not ended
+            require(now < oldEndTime);
+            // end time in future
+            require(now < _endTime);
+
+            closingTime = _endTime;
+            changed = true;
+        }
+
+        if (changed) {
+            emit TimesChanged(openingTime, _endTime, openingTime, closingTime);
+        }
     }
 }

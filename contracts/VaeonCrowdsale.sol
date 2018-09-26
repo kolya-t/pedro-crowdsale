@@ -54,6 +54,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
 
     function dailyCheck(
         uint _usdCentsRaisedByEos,
+        uint _tknCentRate, // 1 tkn = (_tknCentRate / 10 ^ decimals) cents
         uint _ethUsdCentRate,
         uint _stopAfterSeconds
     )
@@ -65,6 +66,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         dailyCheckStopTimestamp = now + _stopAfterSeconds;
 
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
+        rate = _tknCentRate;
         ethUsdCentRate = _ethUsdCentRate;
 
         if (hasClosed()) {

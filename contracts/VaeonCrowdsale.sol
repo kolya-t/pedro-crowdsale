@@ -113,6 +113,13 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         // only move time to future
         require(_startTime > openingTime);
         require(_startTime < closingTime);
+        if (!hasStarted()) {
+            if (openingTime < _startTime) {
+                dailyCheckStopTimestamp = dailyCheckStopTimestamp + (_startTime - openingTime);
+            } else {
+                dailyCheckStopTimestamp = dailyCheckStopTimestamp - (openingTime - _startTime);
+            }
+        }
         emit TimesChanged(_startTime, closingTime, openingTime, closingTime);
         openingTime = _startTime;
     }

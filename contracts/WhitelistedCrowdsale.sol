@@ -78,7 +78,6 @@ contract WhitelistedCrowdsale is MainCrowdsale {
     }
 
     function refundWLOnce() public {
-        require(isFinalized);
         Purchase[] storage array = purchases[msg.sender];
         require(array.length > 0);
 

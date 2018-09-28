@@ -21,6 +21,7 @@ contract('TemplateCrowdsale', accounts => {
     const OWNER = accounts[0];
     const BUYER_1 = accounts[1];
     const BUYER_2 = accounts[2];
+    const BUYER_3 = accounts[3];
     const COLD_WALLET = accounts[4];
     const TARGET_USER = accounts[5];
 
@@ -517,6 +518,43 @@ contract('TemplateCrowdsale', accounts => {
         await timeTo(MIDDLE_TIME + 31);
         // already ended
         await crowdsale.setTimes(MIDDLE_TIME, END_TIME, { from: TARGET_USER }).should.eventually.be.rejected;
+    });
+
+    it('#22 check refundWLOnce from one investor before CS end', async () => {
+        const crowdsale = await createCrowdsale();
+        const token = Token.at(await crowdsale.token());
+        await increaseTime(START_TIME - now);
+
+        const coldWalletSourceBalance = await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET);
+
+        let wei1 = web3.toWei(new BigNumber(2000), 'ether');
+        await crowdsale.sendTransaction({ from: BUYER_1, value: wei1 });
+        let wei2 = web3.toWei(new BigNumber(3500), 'ether');
+        await crowdsale.sendTransaction({ from: BUYER_1, value: wei2 });
+        let wei3 = web3.toWei(new BigNumber(4500), 'ether');
+        await crowdsale.sendTransaction({ from: BUYER_1, value: wei3 });
+
+        await timeTo(END_TIME + 1);
+
+        const coldWalletBalanceDifference = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
+        coldWalletBalanceDifference.should.bignumber.be.equal(0);
+
+        // try to withdraw
+        await crowdsale.withdraw({ from: BUYER_1 }).should.eventually.be.rejected;
+
+        // refundWLOnce
+        const csBalanceBeforeRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
+        await crowdsale.refundWLOnce({ from: BUYER_1 });
+        const csBalanceAfterFirstRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
+        csBalanceBeforeRefund.sub(csBalanceAfterFirstRefund).should.be.bignumber.equal(web3.toWei(4500, 'ether'));
+
+        await crowdsale.refundWLOnce({ from: BUYER_1 });
+        const csBalanceAfterSecondRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
+        csBalanceAfterFirstRefund.sub(csBalanceAfterSecondRefund).should.be.bignumber.equal(web3.toWei(3500, 'ether'));
+
+        await crowdsale.refundWLOnce({ from: BUYER_1 });
+        const csBalanceAfterRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
+        csBalanceAfterSecondRefund.sub(csBalanceAfterRefund).should.be.bignumber.equal(web3.toWei(2000, 'ether'));
     });
 });
 

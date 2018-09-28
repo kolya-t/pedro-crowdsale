@@ -26,7 +26,7 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         }
     }
 
-    function addAddressToWhitelistOnceContribution(address _address, uint _index) internal {
+    function addAddressToWhitelistOnceContribution(address _address, uint _index) external {
         require(!isFinalized);
 
         Purchase[] storage array = purchases[_address];

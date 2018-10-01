@@ -43,7 +43,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
     )
         internal
     {
-        require(msg.value >= MIN_INVESTMENT);
+        require(_weiAmount >= MIN_INVESTMENT);
         require(now < dailyCheckStopTimestamp);
         super._preValidatePurchase(_beneficiary, _weiAmount);
     }

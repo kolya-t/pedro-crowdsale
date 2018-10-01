@@ -3,6 +3,9 @@ const BigNumber = require('bignumber.js');
 
 BigNumber.config({ EXPONENTIAL_AT: 100 });
 
+const HDWalletProvider = require("truffle-hdwallet-provider");
+const mnemonic = "...";
+
 module.exports = {
     networks: {
         ganache: {
@@ -14,13 +17,19 @@ module.exports = {
                 time: new Date('2017-10-10T15:00:00Z'),
                 debug: false,
                 // ,logger: console
-            }),
+            })
         },
         localhost: {
             host: 'localhost',
-            port: 8545,
+            port: 7545,
             network_id: '*', // eslint-disable-line camelcase
         },
+        ropsten: {
+            provider: function() {
+                return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/v3/...")
+            },
+            network_id: 3
+        }
     },
     solc: {
         optimizer: {
@@ -28,7 +37,7 @@ module.exports = {
             runs: 200,
         },
     },
-    network: 'ganache',
+    network: 'ropsten',
     mocha: {
         bail: true,
         fullTrace: true,

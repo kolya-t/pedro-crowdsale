@@ -8,7 +8,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
 
     constructor(
         VaeonToken _token,
-        uint _centToTknCentRate, // 1 cent = (_centToTknCentRate * 10 ^ decimals) cents
+        uint _centToTknCentRate, // 1 usd cent = _centToTknCentRate token cents
         uint _ethUsdCentRate,
         uint _stopAfterSeconds,
         uint _startTime,
@@ -54,7 +54,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
 
     function dailyCheck(
         uint _usdCentsRaisedByEos,
-        uint _centToTknCentRate, // 1 cent = (_centToTknCentRate * 10 ^ decimals) cents
+        uint _centToTknCentRate, // 1 usd cent = _centToTknCentRate token cents
         uint _ethUsdCentRate,
         uint _stopAfterSeconds
     )

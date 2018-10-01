@@ -32,7 +32,7 @@ contract('TemplateCrowdsale', accounts => {
         const token = await Token.new();
         const crowdsale = await Crowdsale.new(
             token.address,
-            1333333333,
+            new BigNumber(1000000000000000000).div(7.5).floor(),
             25000,
             86400,
             1507734000,
@@ -64,7 +64,7 @@ contract('TemplateCrowdsale', accounts => {
         await estimateConstructGas(
             Crowdsale,
             token.address,
-            1333333333,
+            new BigNumber(1000000000000000000).div(7.5).floor(),
             25000,
             86400,
             1507734000,
@@ -155,10 +155,10 @@ contract('TemplateCrowdsale', accounts => {
         const crowdsale = await createCrowdsale();
         const dailyCheckStopTimestamp = Number(await crowdsale.dailyCheckStopTimestamp());
 
-        await crowdsale.dailyCheck(0, 1333333333, 50000, 86400, { from: TARGET_USER }).should.eventually.be.rejected;
+        await crowdsale.dailyCheck(0, 133333333333333333, 50000, 86400, { from: TARGET_USER }).should.eventually.be.rejected;
 
         await timeTo(dailyCheckStopTimestamp);
-        await crowdsale.dailyCheck(0, 1333333333, 50000, 86400 - 10, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 133333333333333333, 50000, 86400 - 10, { from: TARGET_USER });
 
         (await crowdsale.dailyCheckStopTimestamp()).should.bignumber.be.equal(dailyCheckStopTimestamp + 86400 - 10);
         const ethUsdCentRate = await crowdsale.ethUsdCentRate();
@@ -189,7 +189,7 @@ contract('TemplateCrowdsale', accounts => {
         await timeTo(END_TIME + 1);
         // finalize after the END time
         await crowdsale.finalize({ from: TARGET_USER }).should.eventually.be.rejected;
-        await crowdsale.dailyCheck(0, 1333333333, 50000, 0, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, 133333333333333333, 50000, 0, { from: TARGET_USER });
 
         // mint must be disabled
         await token.mint(BUYER_2, 10, { from: TARGET_USER }).should.eventually.be.rejected;
@@ -268,12 +268,12 @@ contract('TemplateCrowdsale', accounts => {
         await crowdsale.sendTransaction({ from: BUYER_1, value: wei });
 
         await increaseTime(86400);
-        await crowdsale.dailyCheck(0, 1428571428, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, new BigNumber(1000000000000000000).div(7).floor(), 20000, 86400, { from: TARGET_USER });
         wei = web3.toWei(new BigNumber(50000), 'ether');
         await crowdsale.sendTransaction({ from: BUYER_2, value: wei });
 
         await increaseTime(86400);
-        await crowdsale.dailyCheck(0, 1428571428, 20000, 86400, { from: TARGET_USER });
+        await crowdsale.dailyCheck(0, new BigNumber(1000000000000000000).div(7).floor(), 20000, 86400, { from: TARGET_USER });
 
         const coldWalletBalanceDifference = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
         const ownerReward = new BigNumber(30).mul(web3.toWei(150000, 'ether')).div(35).floor();
@@ -296,8 +296,8 @@ contract('TemplateCrowdsale', accounts => {
             new BigNumber(5000000).mul(10000000).div(new BigNumber(35000000).mul(200)).mul(1000000000000000000).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).mul(1333333333).floor());
-        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(50000).mul(20000).floor().mul(30).div(35).mul(1428571428).floor());
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).mul(new BigNumber(1000000000000000000).div(7.5).floor()).floor());
+        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(50000).mul(20000).floor().mul(30).div(35).mul(new BigNumber(1000000000000000000).div(7).floor()).floor());
     });
 
     it('#12 check refund not whitelisted', async () => {
@@ -340,7 +340,7 @@ contract('TemplateCrowdsale', accounts => {
         csBalanceAfterFirstWithdraw.sub(csBalanceAfterRefund).should.be.bignumber.equal(wei2);
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(1333333333));
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(new BigNumber(1000000000000000000).div(7.5).floor()));
         (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(0);
     });
 
@@ -387,7 +387,7 @@ contract('TemplateCrowdsale', accounts => {
             new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).mul(1000000000000000000).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).mul(1333333333).floor());
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).mul(new BigNumber(1000000000000000000).div(7.5).floor()).floor());
     });
 
     it('#15 check set end time', async () => {

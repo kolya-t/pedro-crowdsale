@@ -19,7 +19,7 @@ contract WhitelistedCrowdsale is MainCrowdsale {
                 weiRaised = weiRaised.add(purchase.contributedWei);
                 uint centsAmount = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
                 usdCentsRaisedByEth = usdCentsRaisedByEth.add(centsAmount);
-                uint tokens = centsAmount.mul(TOKEN_DECIMAL_MULTIPLIER).div(purchase.rate);
+                uint tokens = centsAmount.mul(purchase.rate).div(TOKEN_DECIMAL_MULTIPLIER);
                 MintableToken(token).mint(address(this), tokens);
                 purchase.isPending = false;
             }
@@ -36,7 +36,7 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         weiRaised = weiRaised.add(purchase.contributedWei);
         uint centsAmount = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
         usdCentsRaisedByEth = usdCentsRaisedByEth.add(centsAmount);
-        uint tokens = centsAmount.mul(TOKEN_DECIMAL_MULTIPLIER).div(purchase.rate);
+        uint tokens = centsAmount.mul(purchase.rate).div(TOKEN_DECIMAL_MULTIPLIER);
         MintableToken(token).mint(address(this), tokens);
         purchase.isPending = false;
 

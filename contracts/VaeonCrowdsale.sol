@@ -8,7 +8,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
 
     constructor(
         VaeonToken _token,
-        uint _tknCentRate, // 1 tkn = (_tknCentRate / 10 ^ decimals) cents
+        uint _centToTknCentRate, // 1 cent = (_centToTknCentRate * 10 ^ decimals) cents
         uint _ethUsdCentRate,
         uint _stopAfterSeconds,
         uint _startTime,
@@ -17,7 +17,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         address _coldWallet
     )
         public
-        Crowdsale(_tknCentRate, _coldWallet, _token)
+        Crowdsale(_centToTknCentRate, _coldWallet, _token)
         TimedCrowdsale(_startTime > now ? _startTime : now, _endTime)
     {
         ethUsdCentRate = _ethUsdCentRate;
@@ -54,7 +54,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
 
     function dailyCheck(
         uint _usdCentsRaisedByEos,
-        uint _tknCentRate, // 1 tkn = (_tknCentRate / 10 ^ decimals) cents
+        uint _centToTknCentRate, // 1 cent = (_centToTknCentRate * 10 ^ decimals) cents
         uint _ethUsdCentRate,
         uint _stopAfterSeconds
     )
@@ -66,7 +66,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         dailyCheckStopTimestamp = now + _stopAfterSeconds;
 
         usdCentsRaisedByEos = _usdCentsRaisedByEos;
-        rate = _tknCentRate;
+        rate = _centToTknCentRate;
         ethUsdCentRate = _ethUsdCentRate;
 
         if (hasClosed()) {
@@ -87,7 +87,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
             weiRaised = weiRaised.add(weiAmount);
             usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdCentRate).div(1 ether));
             uint centsAmount = weiAmount.mul(ethUsdCentRate).div(1 ether);
-            uint tokens = centsAmount.mul(TOKEN_DECIMAL_MULTIPLIER).div(rate);
+            uint tokens = centsAmount.mul(rate).div(TOKEN_DECIMAL_MULTIPLIER);
             MintableToken(token).mint(address(this), tokens);
 
             emit TokenPurchase(

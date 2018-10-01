@@ -64,7 +64,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
                 msg.sender.transfer(returnOverage);
             }
         }
-        uint returnTokens = contributedCents.mul(TOKEN_DECIMAL_MULTIPLIER).mul(centsForOwner).div(centsRaised).div(purchase.rate);
+        uint returnTokens = contributedCents.mul(TOKEN_DECIMAL_MULTIPLIER).mul(centsForOwner).div(centsRaised).mul(purchase.rate).div(TOKEN_DECIMAL_MULTIPLIER);
         if (returnTokens > 0) {
             _deliverTokens(msg.sender, returnTokens);
         }
@@ -91,7 +91,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
                     overageCents.mul(contributedCents).div(centsRaised.mul(purchase.ethUsdCentRate)));
             }
 
-            returnTokens = returnTokens.add(contributedCents.mul(TOKEN_DECIMAL_MULTIPLIER).mul(centsForOwner).div(centsRaised).div(purchase.rate));
+            returnTokens = returnTokens.add(contributedCents.mul(centsForOwner).div(centsRaised).mul(purchase.rate).div(TOKEN_DECIMAL_MULTIPLIER));
         }
 
         if (returnOverage > 0) {

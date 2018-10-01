@@ -64,7 +64,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
                 msg.sender.transfer(returnOverage);
             }
         }
-        uint returnTokens = contributedCents.mul(TOKEN_DECIMAL_MULTIPLIER).mul(centsForOwner).div(centsRaised).mul(purchase.rate).div(TOKEN_DECIMAL_MULTIPLIER);
+        uint returnTokens = _centsToTokens(contributedCents.mul(centsForOwner).div(centsRaised), purchase.rate);
         if (returnTokens > 0) {
             _deliverTokens(msg.sender, returnTokens);
         }
@@ -91,7 +91,7 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
                     overageCents.mul(contributedCents).div(centsRaised.mul(purchase.ethUsdCentRate)));
             }
 
-            returnTokens = returnTokens.add(contributedCents.mul(centsForOwner).div(centsRaised).mul(purchase.rate).div(TOKEN_DECIMAL_MULTIPLIER));
+            returnTokens = returnTokens.add(_centsToTokens(contributedCents.mul(centsForOwner).div(centsRaised), purchase.rate));
         }
 
         if (returnOverage > 0) {
@@ -120,5 +120,9 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
             centsForOwner = centsRaised < USDCENTS_HARD_CAP ? centsRaised : USDCENTS_HARD_CAP;
             wallet.transfer(centsForOwner.mul(weiRaised).div(centsRaised));
         }
+    }
+
+    function _centsToTokens(uint cents, uint currentRate) internal view returns (uint) {
+        return cents.mul(currentRate);
     }
 }

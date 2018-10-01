@@ -87,7 +87,7 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
             weiRaised = weiRaised.add(weiAmount);
             usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdCentRate).div(1 ether));
             uint centsAmount = weiAmount.mul(ethUsdCentRate).div(1 ether);
-            uint tokens = centsAmount.mul(rate).div(TOKEN_DECIMAL_MULTIPLIER);
+            uint tokens = _centsToTokens(centsAmount, rate);
             MintableToken(token).mint(address(this), tokens);
 
             emit TokenPurchase(

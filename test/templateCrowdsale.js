@@ -296,8 +296,8 @@ contract('TemplateCrowdsale', accounts => {
             new BigNumber(5000000).mul(10000000).div(new BigNumber(35000000).mul(200)).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(30).div(35).mul(25000000).div(0.075).floor());
-        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(30).div(35).mul(10000000).div(0.07).floor());
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).floor().mul(1333333333));
+        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(50000).mul(20000).floor().mul(30).div(35).floor().mul(1428571428));
     });
 
     it('#12 check refund not whitelisted', async () => {
@@ -340,7 +340,7 @@ contract('TemplateCrowdsale', accounts => {
         csBalanceAfterFirstWithdraw.sub(csBalanceAfterRefund).should.be.bignumber.equal(wei2);
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(25000000).div(0.075).floor());
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(1333333333));
         (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(0);
     });
 
@@ -387,7 +387,7 @@ contract('TemplateCrowdsale', accounts => {
             new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(25000000).mul(30).div(35).div(0.075).floor());
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).floor().mul(1333333333));
     });
 
     it('#15 check set end time', async () => {

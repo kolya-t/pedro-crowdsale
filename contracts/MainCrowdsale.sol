@@ -16,14 +16,13 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
     );
     event Initialized();
 
-    struct Purchase {
+    struct Contribution {
         uint contributedWei;
-        uint rate;
-        uint ethUsdCentRate;
-        bool isPending;
+        uint contributedCents;
+        uint tokens;
     }
-
-    mapping (address => Purchase[]) public purchases;
+    mapping (address => Contribution) public contributions;
+    mapping (address => Contribution) public pendingContributions;
 
     bool public initialized;
     address public targetUser;
@@ -49,60 +48,25 @@ contract MainCrowdsale is Consts, FinalizableCrowdsale {
         return super.hasClosed() || usdCentsRaisedByEth.add(usdCentsRaisedByEos) >= USDCENTS_HARD_CAP;
     }
 
-    function withdrawOnce() public {
-        require(isFinalized);
-        Purchase[] storage array = purchases[msg.sender];
-        require(array.length > 0);
-
-        uint lastIndex = array.length - 1;
-        Purchase storage purchase = array[lastIndex];
-
-        if (overageCents > 0) {
-            uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
-            uint returnOverage = overageCents.mul(contributedCents).div(centsRaised.mul(purchase.ethUsdCentRate));
-            if (returnOverage > 0) {
-                msg.sender.transfer(returnOverage);
-            }
-        }
-        uint returnTokens = _centsToTokens(contributedCents.mul(centsForOwner).div(centsRaised), purchase.rate);
-        if (returnTokens > 0) {
-            _deliverTokens(msg.sender, returnTokens);
-        }
-
-        delete purchases[msg.sender][lastIndex];
-        purchases[msg.sender].length--;
-        if (array.length == 0) {
-            delete purchases[msg.sender];
-        }
-    }
-
     function withdraw() public {
         require(isFinalized);
 
-        Purchase[] storage array = purchases[msg.sender];
-        uint returnOverage;
-        uint returnTokens;
-        for (uint i = 0; i < array.length; i++) {
-            Purchase storage purchase = array[i];
+        Contribution storage contribution = contributions[msg.sender];
+        require(contribution.contributedWei > 0 && contribution.tokens > 0);
 
-            uint contributedCents = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
-            if (overageCents > 0) {
-                returnOverage = returnOverage.add(
-                    overageCents.mul(contributedCents).div(centsRaised.mul(purchase.ethUsdCentRate)));
+        uint returnOverageWei = contribution.contributedWei.mul(overageCents).div(centsRaised);
+        if (returnOverageWei > 0) {
+            msg.sender.transfer(returnOverageWei);
+        }
+
+        if (centsRaised > 0) {
+            uint returnTokens = contribution.tokens.mul(centsForOwner).div(centsRaised);
+            if (returnTokens > 0) {
+                _deliverTokens(msg.sender, returnTokens);
             }
-
-            returnTokens = returnTokens.add(_centsToTokens(contributedCents.mul(centsForOwner).div(centsRaised), purchase.rate));
         }
 
-        if (returnOverage > 0) {
-            msg.sender.transfer(returnOverage);
-        }
-
-        if (returnTokens > 0) {
-            _deliverTokens(msg.sender, returnTokens);
-        }
-
-        delete purchases[msg.sender];
+        delete contributions[msg.sender];
     }
 
     function finalization() internal {

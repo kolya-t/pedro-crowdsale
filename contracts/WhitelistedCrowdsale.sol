@@ -9,46 +9,24 @@ contract WhitelistedCrowdsale is MainCrowdsale {
     event WhitelistedAddressAdded(address indexed _address);
 
     function _addAddressToWhitelist(address _address) internal {
+        require(!isWhitelisted(_address));
         whitelist[_address] = true;
-        emit WhitelistedAddressAdded(_address);
 
-        Purchase[] storage array = purchases[_address];
-        for (uint i = 0; i < array.length; i++) {
-            Purchase storage purchase = array[i];
-            if (purchase.isPending) {
-                weiRaised = weiRaised.add(purchase.contributedWei);
-                uint centsAmount = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
-                usdCentsRaisedByEth = usdCentsRaisedByEth.add(centsAmount);
-                uint tokens = _centsToTokens(centsAmount, purchase.rate);
-                MintableToken(token).mint(address(this), tokens);
-                purchase.isPending = false;
-            }
+        Contribution storage pendingContribution = pendingContributions[_address];
+        Contribution storage contribution = contributions[_address];
+
+        if (pendingContribution.contributedWei > 0) {
+            contribution.contributedWei = contribution.contributedWei.add(pendingContribution.contributedWei);
+            contribution.contributedCents = contribution.contributedCents.add(pendingContribution.contributedCents);
+            contribution.tokens = contribution.tokens.add(pendingContribution.tokens);
+
+            weiRaised = weiRaised.add(pendingContribution.contributedWei);
+            usdCentsRaisedByEth = usdCentsRaisedByEth.add(pendingContribution.contributedCents);
+            MintableToken(token).mint(address(this), pendingContribution.tokens);
+
+            delete contributions[_address];
         }
-    }
 
-    function addAddressToWhitelistOnceContribution(address _address, uint _index) external {
-        require(!isFinalized);
-
-        Purchase[] storage array = purchases[_address];
-        Purchase storage purchase = array[_index];
-        require(purchase.isPending);
-
-        weiRaised = weiRaised.add(purchase.contributedWei);
-        uint centsAmount = purchase.contributedWei.mul(purchase.ethUsdCentRate).div(1 ether);
-        usdCentsRaisedByEth = usdCentsRaisedByEth.add(centsAmount);
-        uint tokens = _centsToTokens(centsAmount, purchase.rate);
-        MintableToken(token).mint(address(this), tokens);
-        purchase.isPending = false;
-
-        emit TokenPurchase(
-            _address,
-            _address,
-            purchase.contributedWei,
-            purchase.rate,
-            purchase.ethUsdCentRate
-        );
-
-        whitelist[_address] = true;
         emit WhitelistedAddressAdded(_address);
     }
 
@@ -77,37 +55,14 @@ contract WhitelistedCrowdsale is MainCrowdsale {
         return whitelist[_address];
     }
 
-    function refundWLOnce() public {
-        Purchase[] storage array = purchases[msg.sender];
-        require(array.length > 0);
-
-        uint lastIndex = array.length - 1;
-        Purchase storage purchase = array[lastIndex];
-        require(purchase.isPending);
-        msg.sender.transfer(purchase.contributedWei);
-        delete purchases[msg.sender][lastIndex];
-        purchases[msg.sender].length--;
-
-        if (purchases[msg.sender].length == 0) {
-            delete purchases[msg.sender];
-        }
-    }
-
     function refundWL() public {
         require(!isWhitelisted(msg.sender));
-        Purchase[] storage array = purchases[msg.sender];
-        require(array.length > 0);
 
-        uint returnWei;
-        for (uint i = 0; i < array.length; i++) {
-            Purchase storage purchase = array[i];
-            returnWei = returnWei.add(purchase.contributedWei);
+        Contribution storage contribution = pendingContributions[msg.sender];
+        if (contribution.contributedWei > 0) {
+            msg.sender.transfer(contribution.contributedWei);
         }
 
-        if (returnWei > 0) {
-            msg.sender.transfer(returnWei);
-        }
-
-        delete purchases[msg.sender];
+        delete contributions[msg.sender];
     }
 }

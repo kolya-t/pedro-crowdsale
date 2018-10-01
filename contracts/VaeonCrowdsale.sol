@@ -83,28 +83,23 @@ contract VaeonCrowdsale is WhitelistedCrowdsale {
         uint256 weiAmount = msg.value;
         _preValidatePurchase(_beneficiary, weiAmount);
 
+        uint centsAmount = weiAmount.mul(ethUsdCentRate).div(1 ether);
+        uint tokens = _centsToTokens(centsAmount, rate);
+
+        Contribution storage contribution;
         if (isWhitelisted(_beneficiary)) {
             weiRaised = weiRaised.add(weiAmount);
             usdCentsRaisedByEth = usdCentsRaisedByEth.add(weiAmount.mul(ethUsdCentRate).div(1 ether));
-            uint centsAmount = weiAmount.mul(ethUsdCentRate).div(1 ether);
-            uint tokens = _centsToTokens(centsAmount, rate);
             MintableToken(token).mint(address(this), tokens);
 
-            emit TokenPurchase(
-                msg.sender,
-                _beneficiary,
-                weiAmount,
-                rate,
-                ethUsdCentRate
-            );
+            contribution = contributions[_beneficiary];
+        } else {
+            contribution = pendingContributions[_beneficiary];
         }
 
-        _updatePurchasingState(_beneficiary, weiAmount);
-        _postValidatePurchase(_beneficiary, weiAmount);
-    }
-
-    function _updatePurchasingState(address _beneficiary, uint256 _weiAmount) internal {
-        purchases[_beneficiary].push(Purchase(_weiAmount, rate, ethUsdCentRate, !isWhitelisted(_beneficiary)));
+        contribution.contributedWei = contribution.contributedWei.add(weiAmount);
+        contribution.contributedCents = contribution.contributedCents.add(centsAmount);
+        contribution.tokens = contribution.tokens.add(tokens);
     }
 
     function setStartTime(uint _startTime) public onlyOwner {

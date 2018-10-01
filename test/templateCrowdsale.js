@@ -290,14 +290,14 @@ contract('TemplateCrowdsale', accounts => {
 
         // check ETH balances after withdraw
         csBalanceBeforeWithdraw.sub(csBalanceAfterFirstWithdraw).should.be.bignumber.equal(
-            new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).floor());
+            new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).mul(1000000000000000000).floor());
 
         csBalanceAfterFirstWithdraw.sub(csBalanceAfterSecondWithdraw).should.be.bignumber.equal(
-            new BigNumber(5000000).mul(10000000).div(new BigNumber(35000000).mul(200)).floor());
+            new BigNumber(5000000).mul(10000000).div(new BigNumber(35000000).mul(200)).mul(1000000000000000000).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).floor().mul(1333333333));
-        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(50000).mul(20000).floor().mul(30).div(35).floor().mul(1428571428));
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).mul(1333333333).floor());
+        (await token.balanceOf(BUYER_2)).should.bignumber.be.equal(new BigNumber(50000).mul(20000).floor().mul(30).div(35).mul(1428571428).floor());
     });
 
     it('#12 check refund not whitelisted', async () => {
@@ -384,10 +384,10 @@ contract('TemplateCrowdsale', accounts => {
 
         // check ETH balances after withdraw
         csBalanceBeforeWithdraw.sub(csBalanceAfterFirstWithdraw).should.be.bignumber.equal(
-            new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).floor());
+            new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).mul(1000000000000000000).floor());
 
         // check token balances after withdraw
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).floor().mul(1333333333));
+        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(new BigNumber(100000).mul(25000).floor().mul(30).div(35).mul(1333333333).floor());
     });
 
     it('#15 check set end time', async () => {
@@ -518,88 +518,6 @@ contract('TemplateCrowdsale', accounts => {
         await timeTo(MIDDLE_TIME + 31);
         // already ended
         await crowdsale.setTimes(MIDDLE_TIME, END_TIME, { from: TARGET_USER }).should.eventually.be.rejected;
-    });
-
-    it('#22 check refundWLOnce from one investor before CS end', async () => {
-        const crowdsale = await createCrowdsale();
-        const token = Token.at(await crowdsale.token());
-        await increaseTime(START_TIME - now);
-
-        const coldWalletSourceBalance = await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET);
-
-        let wei1 = web3.toWei(new BigNumber(2000), 'ether');
-        await crowdsale.sendTransaction({ from: BUYER_1, value: wei1 });
-        let wei2 = web3.toWei(new BigNumber(3500), 'ether');
-        await crowdsale.sendTransaction({ from: BUYER_1, value: wei2 });
-        let wei3 = web3.toWei(new BigNumber(4500), 'ether');
-        await crowdsale.sendTransaction({ from: BUYER_1, value: wei3 });
-
-        await timeTo(END_TIME + 1);
-
-        const coldWalletBalanceDifference = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
-        coldWalletBalanceDifference.should.bignumber.be.equal(0);
-
-        // try to withdraw
-        await crowdsale.withdraw({ from: BUYER_1 }).should.eventually.be.rejected;
-
-        // refundWLOnce
-        const csBalanceBeforeRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
-        await crowdsale.refundWLOnce({ from: BUYER_1 });
-        const csBalanceAfterFirstRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
-        csBalanceBeforeRefund.sub(csBalanceAfterFirstRefund).should.be.bignumber.equal(web3.toWei(4500, 'ether'));
-
-        await crowdsale.refundWLOnce({ from: BUYER_1 });
-        const csBalanceAfterSecondRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
-        csBalanceAfterFirstRefund.sub(csBalanceAfterSecondRefund).should.be.bignumber.equal(web3.toWei(3500, 'ether'));
-
-        await crowdsale.refundWLOnce({ from: BUYER_1 });
-        const csBalanceAfterRefund = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
-        csBalanceAfterSecondRefund.sub(csBalanceAfterRefund).should.be.bignumber.equal(web3.toWei(2000, 'ether'));
-    });
-
-    it('#23 check withdrawOnce from one investor', async () => {
-        const crowdsale = await createCrowdsale();
-        const token = Token.at(await crowdsale.token());
-        await increaseTime(START_TIME - now);
-
-        const coldWalletSourceBalance = await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET);
-        await crowdsale.addAddressesToWhitelist([BUYER_1, BUYER_2], { from: TARGET_USER });
-
-        let wei = web3.toWei(new BigNumber(100000), 'ether');
-        await crowdsale.sendTransaction({ from: BUYER_1, value: wei });
-
-        await increaseTime(86400);
-        await crowdsale.dailyCheck(0, 1428571428, 20000, 86400, { from: TARGET_USER });
-        wei = web3.toWei(new BigNumber(50000), 'ether');
-        await crowdsale.sendTransaction({ from: BUYER_1, value: wei });
-
-        await increaseTime(86400);
-        await crowdsale.dailyCheck(0, 1428571428, 20000, 86400, { from: TARGET_USER });
-
-        const coldWalletBalanceDifference = (await web3async(web3.eth, web3.eth.getBalance, COLD_WALLET)).sub(coldWalletSourceBalance);
-        const ownerReward = new BigNumber(30).mul(web3.toWei(150000, 'ether')).div(35).floor();
-        coldWalletBalanceDifference.should.bignumber.be.equal(ownerReward);
-
-        // withdraw
-        const csBalanceBeforeWithdraw = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
-
-        await crowdsale.withdrawOnce({ from: BUYER_1 });
-        const csBalanceAfterFirstWithdraw = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
-
-        await crowdsale.withdrawOnce({ from: BUYER_1 });
-        const csBalanceAfterSecondWithdraw = await web3async(web3.eth, web3.eth.getBalance, crowdsale.address);
-
-        // check ETH balances after withdraw
-        csBalanceBeforeWithdraw.sub(csBalanceAfterFirstWithdraw).should.be.bignumber.equal(
-            new BigNumber(5000000).mul(10000000).div(new BigNumber(35000000).mul(200)).floor());
-
-        csBalanceAfterFirstWithdraw.sub(csBalanceAfterSecondWithdraw).should.be.bignumber.equal(
-            new BigNumber(5000000).mul(25000000).div(new BigNumber(35000000).mul(250)).floor());
-
-        // check token balances after withdraw
-        const firstTokens = new BigNumber(100000).mul(25000).floor().mul(30).div(35).floor().mul(1333333333);
-        const secondTokens = new BigNumber(50000).mul(20000).floor().mul(30).div(35).floor().mul(1428571428);
-        (await token.balanceOf(BUYER_1)).should.bignumber.be.equal(firstTokens.add(secondTokens));
     });
 });
 

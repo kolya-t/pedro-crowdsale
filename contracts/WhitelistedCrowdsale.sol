@@ -24,7 +24,7 @@ contract WhitelistedCrowdsale is MainCrowdsale {
             usdCentsRaisedByEth = usdCentsRaisedByEth.add(pendingContribution.contributedCents);
             MintableToken(token).mint(address(this), pendingContribution.tokens);
 
-            delete contributions[_address];
+            delete pendingContributions[_address];
         }
 
         emit WhitelistedAddressAdded(_address);
